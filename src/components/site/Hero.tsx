@@ -41,8 +41,8 @@ const Hero = ({ onStart }: { onStart: () => void }) => {
             className="mt-6 max-w-lg text-lg leading-relaxed text-hero-muted"
             style={{ animation: 'hero-rise 0.9s ease 0.62s both' }}
           >
-            Бронируйте угодья, ведите календарь выездов, считайте бюджет и храните
-            учёт оружия — <b className="font-semibold text-hero-text">всё хозяйство под рукой</b> в одном приложении.
+            Ведите календарь выездов, считайте бюджет и храните учёт оружия —
+            <b className="font-semibold text-hero-text"> весь ваш охотничий дневник под рукой</b> в одном приложении.
           </p>
 
           <div
@@ -65,7 +65,7 @@ const Hero = ({ onStart }: { onStart: () => void }) => {
         </div>
 
         <footer
-          className="flex items-end justify-between text-sm tracking-wide text-hero-muted"
+          className="flex items-end text-sm tracking-wide text-hero-muted"
           style={{ animation: 'hero-rise 1s ease 0.9s both' }}
         >
           <span className="flex items-center gap-2.5">
@@ -73,9 +73,8 @@ const Hero = ({ onStart }: { onStart: () => void }) => {
               className="inline-block h-[7px] w-[7px] rounded-full bg-hero-accent"
               style={{ animation: 'hero-pulse 2.6s ease-in-out infinite' }}
             />
-            Открыты круглый год · вольерная охота на кабана и косулю
+            Личный дневник для каждого охотника
           </span>
-          <span className="tabular-nums tracking-[0.06em]">56.7748° N&nbsp;&nbsp;69.0561° E</span>
         </footer>
       </div>
     </section>

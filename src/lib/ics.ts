@@ -11,12 +11,12 @@ function toIcsDate(dateStr: string): string {
 }
 
 export function downloadIcs(ev: IcsEvent) {
-  const uid = `${Date.now()}@malyshenskoe`;
+  const uid = `${Date.now()}@hunter-diary`;
   const dt = toIcsDate(ev.date);
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Малышенское//Личный дневник охотника//RU',
+    'PRODID:-//Личный дневник охотника//RU',
     'CALSCALE:GREGORIAN',
     'BEGIN:VEVENT',
     `UID:${uid}`,

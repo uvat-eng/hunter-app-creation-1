@@ -4,11 +4,9 @@ import Icon from '@/components/ui/icon';
 const links = [
   { href: '#cabinet', label: 'Кабинет' },
   { href: '#calendar', label: 'Календарь' },
-  { href: '#gear', label: 'Оружие' },
   { href: '#hunts', label: 'Дневник' },
-  { href: '#estate', label: 'Хозяйство' },
-  { href: '#hunt-choice', label: 'Выбор охоты' },
-  { href: '#tours', label: 'Туры' },
+  { href: '#gear', label: 'Оружие' },
+  { href: '#map', label: 'Карта охот' },
 ];
 
 const Header = ({ onStart }: { onStart: () => void }) => {
@@ -19,10 +17,10 @@ const Header = ({ onStart }: { onStart: () => void }) => {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-10">
         <a href="#top" className="flex items-baseline gap-3">
           <span className="font-head text-xl font-bold tracking-tight text-hero-text md:text-2xl">
-            Малышенское
+            Личный кабинет
           </span>
           <span className="hidden text-[0.68rem] uppercase tracking-[0.24em] text-hero-muted sm:inline">
-            Охотхозяйство
+            Охотника
           </span>
         </a>
 

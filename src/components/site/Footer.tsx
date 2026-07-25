@@ -7,15 +7,15 @@ const Footer = ({ onStart }: { onStart: () => void }) => (
         <div className="max-w-sm">
           <div className="flex items-baseline gap-3">
             <span className="font-head text-2xl font-bold tracking-tight text-hero-text">
-              Малышенское
+              Личный кабинет
             </span>
             <span className="text-[0.68rem] uppercase tracking-[0.24em] text-hero-muted">
-              Охотхозяйство
+              Охотника
             </span>
           </div>
           <p className="mt-4 text-sm leading-relaxed text-hero-muted">
-            Личный дневник охотника и бронирование угодий. Заповедные леса Западной Сибири,
-            организованная охота с сопровождением егерей.
+            Личный дневник охотника: календарь выездов, учёт трофеев, бюджет и оружие —
+            всё в одном приложении для вас.
           </p>
           <button
             onClick={onStart}
@@ -25,37 +25,29 @@ const Footer = ({ onStart }: { onStart: () => void }) => (
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-10 sm:grid-cols-2">
           <div>
             <div className="mb-3 text-xs uppercase tracking-wide text-hero-muted">Личный кабинет</div>
             <ul className="space-y-2 text-sm">
               <li><a href="#cabinet" className="text-hero-text transition-colors hover:text-primary">Кабинет</a></li>
               <li><a href="#calendar" className="text-hero-text transition-colors hover:text-primary">Календарь охот</a></li>
-              <li><a href="#gear" className="text-hero-text transition-colors hover:text-primary">Оружие</a></li>
               <li><a href="#hunts" className="text-hero-text transition-colors hover:text-primary">Дневник</a></li>
-            </ul>
-          </div>
-          <div>
-            <div className="mb-3 text-xs uppercase tracking-wide text-hero-muted">Охота</div>
-            <ul className="space-y-2 text-sm">
-              <li><a href="#estate" className="text-hero-text transition-colors hover:text-primary">Хозяйство</a></li>
-              <li><a href="#hunt-choice" className="text-hero-text transition-colors hover:text-primary">Выбор охоты</a></li>
-              <li><a href="#tours" className="text-hero-text transition-colors hover:text-primary">Пакеты туров</a></li>
+              <li><a href="#gear" className="text-hero-text transition-colors hover:text-primary">Оружие</a></li>
+              <li><a href="#map" className="text-hero-text transition-colors hover:text-primary">Карта охот</a></li>
             </ul>
           </div>
           <div>
             <div className="mb-3 text-xs uppercase tracking-wide text-hero-muted">Контакты</div>
             <ul className="space-y-2 text-sm text-hero-muted">
               <li className="flex items-center gap-2"><Icon name="Phone" size={15} className="text-primary" /> +7 (345) 200-00-00</li>
-              <li className="flex items-center gap-2"><Icon name="Mail" size={15} className="text-primary" /> hunt@malyshenskoe.ru</li>
-              <li className="flex items-center gap-2"><Icon name="MapPin" size={15} className="text-primary" /> Тюменская обл.</li>
+              <li className="flex items-center gap-2"><Icon name="Mail" size={15} className="text-primary" /> support@hunter-diary.ru</li>
             </ul>
           </div>
         </div>
       </div>
 
       <div className="mt-12 border-t border-border pt-6 text-xs text-hero-muted">
-        © {new Date().getFullYear()} Охотхозяйство «Малышенское». Охотьтесь ответственно.
+        © {new Date().getFullYear()} Личный кабинет охотника. Охотьтесь ответственно.
       </div>
     </div>
   </footer>

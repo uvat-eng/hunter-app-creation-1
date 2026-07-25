@@ -109,7 +109,7 @@ const HunterOnboarding = ({
           </DialogTitle>
           <DialogDescription className="text-hero-muted">
             {step === 0
-              ? 'Малышенское — заведите карточку за 2 минуты'
+              ? 'Заведите карточку охотника за 2 минуты'
               : 'Заполните данные — и откроется личный кабинет'}
           </DialogDescription>
         </DialogHeader>

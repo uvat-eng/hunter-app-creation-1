@@ -2,19 +2,16 @@ import { useEffect, useState } from 'react';
 import Header from '@/components/site/Header';
 import Hero from '@/components/site/Hero';
 import Cabinet from '@/components/site/Cabinet';
-import Estate from '@/components/site/Estate';
-import Tours from '@/components/site/Tours';
 import MyCalendar from '@/components/site/MyCalendar';
 import Hunts from '@/components/site/Hunts';
 import Gear from '@/components/site/Gear';
-import HuntChoice from '@/components/site/HuntChoice';
+import HuntMap from '@/components/site/HuntMap';
 import Footer from '@/components/site/Footer';
 import HunterOnboarding, { type HunterProfile } from '@/components/site/HunterOnboarding';
 import { huntersApi } from '@/lib/api';
-import { toast } from '@/hooks/use-toast';
 import { useHuntEvents } from '@/hooks/use-hunt-events';
 
-const HUNTER_ID_KEY = 'malyshenskoe_hunter_id';
+const HUNTER_ID_KEY = 'hunter_diary_hunter_id';
 
 const Index = () => {
   const [authOpen, setAuthOpen] = useState(false);
@@ -47,10 +44,6 @@ const Index = () => {
     if (p.id) localStorage.setItem(HUNTER_ID_KEY, p.id);
   };
 
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
     <div className="min-h-screen bg-hero-bg font-body text-hero-text">
       <Header onStart={() => setAuthOpen(true)} />
@@ -65,9 +58,7 @@ const Index = () => {
       />
       <Hunts hunterId={profile?.id} events={events} loading={eventsLoading} onUpsert={upsertEvent} />
       <Gear hunterId={profile?.id} />
-      <Estate onBook={() => scrollTo('hunt-choice')} />
-      <HuntChoice onPick={() => scrollTo('tours')} />
-      <Tours onBook={() => toast({ title: 'Бронирование туров скоро будет доступно', description: 'Мы готовим отдельный раздел для брони охотхозяйства.' })} />
+      <HuntMap hunterId={profile?.id} events={events} loading={eventsLoading} />
       <Footer onStart={() => setAuthOpen(true)} />
 
       <HunterOnboarding open={authOpen} onOpenChange={setAuthOpen} onComplete={handleComplete} />

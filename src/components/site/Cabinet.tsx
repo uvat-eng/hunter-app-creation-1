@@ -2,12 +2,10 @@ import type { HunterProfile } from './HunterOnboarding';
 import Icon from '@/components/ui/icon';
 
 const routes = [
-  { icon: 'CalendarDays', label: 'Мой календарь', href: '#calendar', desc: 'планы и завершённые охоты' },
-  { icon: 'Target', label: 'Моё оружие', href: '#gear', desc: '3 единицы в учёте' },
-  { icon: 'Crosshair', label: 'Мои охоты', href: '#hunts', desc: '12 выездов · 34 трофея' },
-  { icon: 'Wallet', label: 'Мой бюджет', href: '#hunts', desc: '48 200 ₽ за сезон' },
-  { icon: 'Trees', label: 'Хозяйство', href: '#estate', desc: 'Малышенское · 24 000 га' },
-  { icon: 'Compass', label: 'Выбор охоты', href: '#hunt-choice', desc: 'подобрать пакет тура' },
+  { icon: 'CalendarDays', label: 'Календарь охот', href: '#calendar', desc: 'планы и завершённые охоты' },
+  { icon: 'BookOpen', label: 'Дневник охот', href: '#hunts', desc: 'история выездов и трофеи' },
+  { icon: 'Target', label: 'Моё оружие', href: '#gear', desc: 'учёт стволов и разрешений' },
+  { icon: 'Map', label: 'Карта охот', href: '#map', desc: 'точки выездов на карте' },
 ];
 
 const stats = [
