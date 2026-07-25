@@ -7,6 +7,7 @@ import Tours from '@/components/site/Tours';
 import Booking from '@/components/site/Booking';
 import Hunts from '@/components/site/Hunts';
 import Gear from '@/components/site/Gear';
+import HuntChoice from '@/components/site/HuntChoice';
 import Footer from '@/components/site/Footer';
 import HunterOnboarding, { type HunterProfile } from '@/components/site/HunterOnboarding';
 import { huntersApi } from '@/lib/api';
@@ -43,8 +44,8 @@ const Index = () => {
     if (p.id) localStorage.setItem(HUNTER_ID_KEY, p.id);
   };
 
-  const openBooking = () => {
-    document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' });
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -52,11 +53,12 @@ const Index = () => {
       <Header onStart={() => setAuthOpen(true)} />
       <Hero onStart={() => setAuthOpen(true)} />
       <Cabinet profile={profile} onStart={() => setAuthOpen(true)} />
-      <Estate onBook={openBooking} />
-      <Tours onBook={openBooking} />
       <Booking hunterId={profile?.id} />
-      <Hunts />
       <Gear hunterId={profile?.id} />
+      <Hunts />
+      <Estate onBook={() => scrollTo('hunt-choice')} />
+      <HuntChoice onPick={() => scrollTo('tours')} />
+      <Tours onBook={() => scrollTo('booking')} />
       <Footer onStart={() => setAuthOpen(true)} />
 
       <HunterOnboarding open={authOpen} onOpenChange={setAuthOpen} onComplete={handleComplete} />

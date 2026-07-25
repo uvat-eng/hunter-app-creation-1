@@ -2,10 +2,13 @@ import { useState } from 'react';
 import Icon from '@/components/ui/icon';
 
 const links = [
-  { href: '#hunts', label: 'Мои охоты' },
-  { href: '#estate', label: 'Хозяйство' },
-  { href: '#booking', label: 'Бронирование' },
+  { href: '#cabinet', label: 'Кабинет' },
+  { href: '#booking', label: 'Календарь' },
   { href: '#gear', label: 'Оружие' },
+  { href: '#hunts', label: 'Дневник' },
+  { href: '#estate', label: 'Хозяйство' },
+  { href: '#hunt-choice', label: 'Выбор охоты' },
+  { href: '#tours', label: 'Туры' },
 ];
 
 const Header = ({ onStart }: { onStart: () => void }) => {
