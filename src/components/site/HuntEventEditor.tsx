@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import RussiaMap from './RussiaMap';
+import YandexPlacePicker from './YandexPlacePicker';
 import Icon from '@/components/ui/icon';
 import {
   Dialog,
@@ -24,8 +24,9 @@ export const emptyDraft = (): Draft => ({
   date: '',
   status: 'planned',
   locationName: '',
-  mapX: null,
-  mapY: null,
+  lat: null,
+  lng: null,
+  region: '',
   notes: '',
   reminder: true,
   trophies: [],
@@ -35,7 +36,7 @@ export const emptyDraft = (): Draft => ({
 
 const steps = [
   { title: 'Событие', desc: 'Название, вид охоты, дата и статус' },
-  { title: 'Место', desc: 'Где проходила или пройдёт охота — отметьте точку на карте' },
+  { title: 'Место', desc: 'Введите адрес — точка на карте появится автоматически, или отметьте вручную' },
   { title: 'Трофеи', desc: 'Что удалось добыть (если охота уже состоялась)' },
   { title: 'Фотографии', desc: 'До 5 фотографий с охоты' },
   { title: 'Напоминание', desc: 'Добавить событие в календарь телефона' },
@@ -287,32 +288,23 @@ const HuntEventEditor = ({ open, onOpenChange, hunterId, editEvent, initialDate,
         {step === 1 && (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="ev-loc" className="text-hero-muted">Название места</Label>
-              <Input
-                id="ev-loc"
-                value={draft.locationName}
-                onChange={(e) => setDraft((d) => ({ ...d, locationName: e.target.value }))}
-                placeholder="Озёрный сектор, Малышенское"
-                className="mt-1.5 border-border bg-hero-bg"
-              />
-            </div>
-            <div>
-              <Label className="text-hero-muted">Точка на карте — нажмите, чтобы отметить</Label>
+              <Label htmlFor="ev-loc" className="text-hero-muted">Место охоты</Label>
               <div className="mt-1.5">
-                <RussiaMap
-                  x={draft.mapX}
-                  y={draft.mapY}
-                  onPick={(x, y) => setDraft((d) => ({ ...d, mapX: x, mapY: y }))}
+                <YandexPlacePicker
+                  address={draft.locationName}
+                  lat={draft.lat}
+                  lng={draft.lng}
+                  onChange={(patch) =>
+                    setDraft((d) => ({
+                      ...d,
+                      ...(patch.address !== undefined ? { locationName: patch.address } : {}),
+                      ...(patch.lat !== undefined ? { lat: patch.lat } : {}),
+                      ...(patch.lng !== undefined ? { lng: patch.lng } : {}),
+                      ...(patch.region !== undefined ? { region: patch.region } : {}),
+                    }))
+                  }
                 />
               </div>
-              {draft.mapX !== null && (
-                <button
-                  onClick={() => setDraft((d) => ({ ...d, mapX: null, mapY: null }))}
-                  className="mt-2 text-xs text-hero-muted underline-offset-2 hover:text-hero-text hover:underline"
-                >
-                  Сбросить точку
-                </button>
-              )}
             </div>
           </div>
         )}

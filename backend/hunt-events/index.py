@@ -38,8 +38,9 @@ def to_client(d):
         'date': d['event_date'].isoformat() if d.get('event_date') else '',
         'status': d['status'],
         'locationName': d['location_name'] or '',
-        'mapX': float(d['map_x']) if d.get('map_x') is not None else None,
-        'mapY': float(d['map_y']) if d.get('map_y') is not None else None,
+        'lat': float(d['lat']) if d.get('lat') is not None else None,
+        'lng': float(d['lng']) if d.get('lng') is not None else None,
+        'region': d.get('region') or '',
         'notes': d['notes'] or '',
         'reminder': d['reminder'],
         'trophies': d['trophies'] if d.get('trophies') else [],
@@ -107,8 +108,8 @@ def handler(event: dict, context) -> dict:
         q(cur, """
             INSERT INTO hunt_events (
                 hunter_id, title, hunt_type, event_date, status,
-                location_name, map_x, map_y, notes, reminder, trophies, photos, budget
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                location_name, lat, lng, region, notes, reminder, trophies, photos, budget
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING *
         """, (
             hunter_id,
@@ -117,8 +118,9 @@ def handler(event: dict, context) -> dict:
             event_date,
             body.get('status', 'planned'),
             body.get('locationName', ''),
-            body.get('mapX'),
-            body.get('mapY'),
+            body.get('lat'),
+            body.get('lng'),
+            body.get('region', ''),
             body.get('notes', ''),
             bool(body.get('reminder', False)),
             json.dumps(body.get('trophies') or []),
@@ -136,7 +138,7 @@ def handler(event: dict, context) -> dict:
         q(cur, """
             UPDATE hunt_events SET
                 title = %s, hunt_type = %s, event_date = %s, status = %s,
-                location_name = %s, map_x = %s, map_y = %s, notes = %s,
+                location_name = %s, lat = %s, lng = %s, region = %s, notes = %s,
                 reminder = %s, trophies = %s, photos = %s, budget = %s, updated_at = now()
             WHERE id = %s
             RETURNING *
@@ -146,8 +148,9 @@ def handler(event: dict, context) -> dict:
             body.get('date'),
             body.get('status', 'planned'),
             body.get('locationName', ''),
-            body.get('mapX'),
-            body.get('mapY'),
+            body.get('lat'),
+            body.get('lng'),
+            body.get('region', ''),
             body.get('notes', ''),
             bool(body.get('reminder', False)),
             json.dumps(body.get('trophies') or []),

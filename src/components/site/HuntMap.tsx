@@ -1,9 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import SectionHeading from './SectionHeading';
 import Icon from '@/components/ui/icon';
 import type { HuntEventDto } from '@/lib/api';
-
-const MAP_URL = 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/e4fe8ddd-f3f2-40b1-b1dd-42130141e7fd.jpg';
+import { loadYandexMaps } from '@/lib/yandex-maps';
 
 interface Props {
   hunterId?: string;
@@ -11,9 +10,67 @@ interface Props {
   loading: boolean;
 }
 
+const fmtMoney = (n: number) => `${n.toLocaleString('ru')} ₽`;
+
 const HuntMap = ({ hunterId, events = [], loading }: Props) => {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<any>(null);
+  const [mapError, setMapError] = useState(false);
   const [active, setActive] = useState<HuntEventDto | null>(null);
-  const points = events.filter((ev) => ev.mapX !== null && ev.mapY !== null);
+  const [activeRegion, setActiveRegion] = useState<string | null>(null);
+
+  const points = useMemo(() => events.filter((ev) => ev.lat !== null && ev.lng !== null), [events]);
+
+  const regionStats = useMemo(() => {
+    const map = new Map<string, { count: number; budget: number }>();
+    events.forEach((ev) => {
+      const key = ev.region?.trim() || 'Без региона';
+      const cur = map.get(key) || { count: 0, budget: 0 };
+      cur.count += 1;
+      cur.budget += ev.budget || 0;
+      map.set(key, cur);
+    });
+    return [...map.entries()]
+      .map(([region, v]) => ({ region, ...v }))
+      .sort((a, b) => b.count - a.count);
+  }, [events]);
+
+  useEffect(() => {
+    if (!hunterId || points.length === 0) return;
+    let cancelled = false;
+    loadYandexMaps()
+      .then(() => {
+        if (cancelled || !mapRef.current) return;
+        const ymaps = (window as any).ymaps;
+        const map = new ymaps.Map(mapRef.current, {
+          center: [points[0].lat, points[0].lng],
+          zoom: 5,
+          controls: ['zoomControl'],
+        });
+        mapInstance.current = map;
+
+        points.forEach((ev) => {
+          const pm = new ymaps.Placemark(
+            [ev.lat, ev.lng],
+            { balloonContent: ev.title },
+            { preset: ev.status === 'done' ? 'islands#grayDotIcon' : 'islands#orangeDotIcon' },
+          );
+          pm.events.add('click', () => setActive(ev));
+          map.geoObjects.add(pm);
+        });
+
+        if (points.length > 1) {
+          map.setBounds(map.geoObjects.getBounds(), { checkZoomRange: true, zoomMargin: 40 });
+        }
+      })
+      .catch(() => setMapError(true));
+
+    return () => {
+      cancelled = true;
+      mapInstance.current?.destroy?.();
+      mapInstance.current = null;
+    };
+  }, [hunterId, points]);
 
   return (
     <section id="map" className="border-t border-border bg-hero-bg py-20 md:py-28">
@@ -37,38 +94,22 @@ const HuntMap = ({ hunterId, events = [], loading }: Props) => {
           <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-border bg-hero-surface px-6 py-16 text-center">
             <Icon name="MapPinned" size={26} className="text-hero-muted" />
             <p className="text-sm text-hero-muted">
-              Точек пока нет — отметьте место на карте при добавлении события в календаре.
+              Точек пока нет — укажите адрес охоты при добавлении события в календаре.
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-            <div
-              className="relative aspect-square w-full overflow-hidden rounded-lg border border-border bg-hero-surface"
-              style={{ backgroundImage: `url(${MAP_URL})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
-            >
-              {points.map((ev) => (
-                <button
-                  key={ev.id}
-                  onClick={() => setActive(ev)}
-                  className="absolute -translate-x-1/2 -translate-y-full text-primary transition-transform hover:scale-110"
-                  style={{ left: `${ev.mapX}%`, top: `${ev.mapY}%` }}
-                  aria-label={ev.title}
-                >
-                  <Icon
-                    name="MapPin"
-                    size={30}
-                    className={`drop-shadow-[0_0_6px_rgba(217,154,63,0.8)] ${
-                      active?.id === ev.id ? 'text-hero-accent' : ''
-                    }`}
-                    fill="currentColor"
-                  />
-                </button>
-              ))}
-            </div>
+          <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+            <div className="space-y-4">
+              {mapError ? (
+                <div className="flex aspect-square items-center justify-center rounded-lg border border-dashed border-border bg-hero-surface p-6 text-center text-sm text-hero-muted">
+                  <Icon name="TriangleAlert" size={18} className="mr-2" /> Не удалось загрузить карту
+                </div>
+              ) : (
+                <div ref={mapRef} className="aspect-square w-full overflow-hidden rounded-lg border border-border bg-hero-surface" />
+              )}
 
-            <div className="rounded-lg border border-border bg-hero-surface p-6 md:p-8">
-              {active ? (
-                <div>
+              {active && (
+                <div className="rounded-lg border border-border bg-hero-surface p-5">
                   <div className="flex items-center gap-2">
                     <span
                       className={`h-2 w-2 rounded-full ${active.status === 'planned' ? 'bg-primary' : 'bg-hero-muted'}`}
@@ -97,30 +138,46 @@ const HuntMap = ({ hunterId, events = [], loading }: Props) => {
                   )}
                   {active.budget ? (
                     <div className="mt-3 text-sm text-hero-muted">
-                      Бюджет: <span className="font-medium text-hero-text">{active.budget.toLocaleString('ru')} ₽</span>
+                      Бюджет: <span className="font-medium text-hero-text">{fmtMoney(active.budget)}</span>
                     </div>
                   ) : null}
                 </div>
-              ) : (
-                <div className="flex h-full flex-col items-center justify-center gap-2 py-8 text-center text-sm text-hero-muted">
-                  <Icon name="MousePointerClick" size={24} className="text-hero-muted" />
-                  Нажмите на метку на карте, чтобы увидеть детали выезда.
-                </div>
               )}
+            </div>
 
-              <div className="mt-6 space-y-1.5 border-t border-border pt-4">
-                {points.map((ev) => (
-                  <button
-                    key={ev.id}
-                    onClick={() => setActive(ev)}
-                    className={`flex w-full items-center gap-2 rounded-sm px-2.5 py-2 text-left text-sm transition-colors ${
-                      active?.id === ev.id ? 'bg-primary/10 text-hero-text' : 'text-hero-muted hover:bg-secondary'
+            {/* экспликация по регионам */}
+            <div className="rounded-lg border border-border bg-hero-surface p-6 md:p-8">
+              <div className="font-head text-lg font-semibold uppercase tracking-wide text-hero-text">
+                Экспликация по регионам
+              </div>
+              <p className="mt-1 text-xs text-hero-muted">Количество выездов и бюджет по каждому региону</p>
+
+              <div className="mt-5 space-y-2">
+                {regionStats.map((r) => (
+                  <div
+                    key={r.region}
+                    onMouseEnter={() => setActiveRegion(r.region)}
+                    onMouseLeave={() => setActiveRegion(null)}
+                    className={`flex items-center justify-between gap-3 rounded-sm border px-3.5 py-3 transition-colors ${
+                      activeRegion === r.region ? 'border-primary bg-primary/10' : 'border-border bg-hero-bg'
                     }`}
                   >
-                    <Icon name="MapPin" size={13} className="shrink-0 text-primary" />
-                    <span className="truncate">{ev.title}</span>
-                  </button>
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium text-hero-text">{r.region}</div>
+                      <div className="text-xs text-hero-muted">
+                        {r.count} {r.count === 1 ? 'выезд' : r.count < 5 ? 'выезда' : 'выездов'}
+                      </div>
+                    </div>
+                    <div className="shrink-0 font-head text-base font-bold text-primary">
+                      {r.budget > 0 ? fmtMoney(r.budget) : '—'}
+                    </div>
+                  </div>
                 ))}
+              </div>
+
+              <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm">
+                <span className="text-hero-muted">Всего регионов</span>
+                <span className="font-head text-lg font-bold text-hero-text">{regionStats.length}</span>
               </div>
             </div>
           </div>

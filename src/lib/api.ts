@@ -88,8 +88,9 @@ export interface HuntEventDto {
   date: string;
   status: 'planned' | 'done';
   locationName: string;
-  mapX: number | null;
-  mapY: number | null;
+  lat: number | null;
+  lng: number | null;
+  region: string;
   notes: string;
   reminder: boolean;
   trophies: TrophyDto[];
