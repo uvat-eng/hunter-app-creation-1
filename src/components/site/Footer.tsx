@@ -46,13 +46,19 @@ const Footer = ({ onStart }: { onStart: () => void }) => (
         </div>
       </div>
 
-      <div className="mt-12 border-t border-border pt-6 text-xs leading-relaxed text-hero-muted">
-        Охотимся с головой, безопасность на охоте — это личная ответственность каждого охотника. Думайте головой,
-        а не стаканом. Не бухайте, соблюдайте правила охоты, они написаны кровью. Всех нас дома ждут семьи, жёны,
-        дети. Пусть охота для каждого охотника будет любимым хобби, а не обременением.
-        <br className="hidden sm:block" />
-        Создано коллективом охотничьего хозяйства «Малышенское», с. Малоскаредное, Аромашевский район Тюменской
-        области. {new Date().getFullYear()} год.
+      <div className="mt-12 flex flex-col gap-4 border-t border-border pt-6 text-xs leading-relaxed text-hero-muted md:flex-row md:items-end md:justify-between">
+        <p>
+          Охотимся с головой, безопасность на охоте — это личная ответственность каждого охотника. Думайте головой,
+          а не стаканом. Не бухайте, соблюдайте правила охоты, они написаны кровью. Всех нас дома ждут семьи, жёны,
+          дети. Пусть охота для каждого охотника будет любимым хобби, а не обременением.
+          <br className="hidden sm:block" />
+          Создано коллективом охотничьего хозяйства «Малышенское», с. Малоскаредное, Аромашевский район Тюменской
+          области. {new Date().getFullYear()} год.
+        </p>
+        <div className="flex shrink-0 gap-4">
+          <a href="/privacy" className="text-hero-text transition-colors hover:text-primary">Конфиденциальность</a>
+          <a href="/terms" className="text-hero-text transition-colors hover:text-primary">Условия</a>
+        </div>
       </div>
     </div>
   </footer>
