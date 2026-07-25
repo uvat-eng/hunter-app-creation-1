@@ -118,6 +118,7 @@ export interface HuntEventDto {
   reminder: boolean;
   trophies: TrophyDto[];
   photos: string[];
+  videos: string[];
   budget: number | null;
 }
 

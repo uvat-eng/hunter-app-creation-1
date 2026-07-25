@@ -56,7 +56,13 @@ const Index = () => {
         onUpsert={upsertEvent}
         onRemove={removeEvent}
       />
-      <Hunts hunterId={profile?.id} events={events} loading={eventsLoading} onUpsert={upsertEvent} />
+      <Hunts
+        hunterId={profile?.id}
+        events={events}
+        loading={eventsLoading}
+        onUpsert={upsertEvent}
+        onRemove={removeEvent}
+      />
       <Gear hunterId={profile?.id} />
       <HuntMap hunterId={profile?.id} events={events} loading={eventsLoading} />
       <Footer onStart={() => setAuthOpen(true)} />

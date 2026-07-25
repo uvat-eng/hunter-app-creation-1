@@ -3,6 +3,7 @@ import SectionHeading from './SectionHeading';
 import Icon from '@/components/ui/icon';
 import type { HuntEventDto } from '@/lib/api';
 import HuntEventEditor from './HuntEventEditor';
+import HuntEventViewer from './HuntEventViewer';
 
 const tags = ['Все', 'Перо', 'Копытные'];
 
@@ -11,22 +12,31 @@ interface Props {
   events: HuntEventDto[];
   loading: boolean;
   onUpsert: (saved: HuntEventDto) => void;
+  onRemove?: (id: string) => void;
 }
 
 const formatBudget = (n: number | null) => (n ? `${n.toLocaleString('ru')} ₽` : '—');
 
-const Hunts = ({ hunterId, events = [], loading, onUpsert }: Props) => {
+const Hunts = ({ hunterId, events = [], loading, onUpsert, onRemove }: Props) => {
   const [filter, setFilter] = useState('Все');
   const [editEvent, setEditEvent] = useState<HuntEventDto | null>(null);
   const [open, setOpen] = useState(false);
+  const [viewEvent, setViewEvent] = useState<HuntEventDto | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
 
   const rows = [...events]
     .filter((h) => filter === 'Все' || h.huntType === filter)
     .sort((a, b) => (a.date < b.date ? 1 : -1));
 
   const openEdit = (ev: HuntEventDto) => {
+    setViewOpen(false);
     setEditEvent(ev);
     setOpen(true);
+  };
+
+  const openView = (ev: HuntEventDto) => {
+    setViewEvent(ev);
+    setViewOpen(true);
   };
 
   return (
@@ -81,7 +91,7 @@ const Hunts = ({ hunterId, events = [], loading, onUpsert }: Props) => {
             rows.map((h) => (
               <button
                 key={h.id}
-                onClick={() => openEdit(h)}
+                onClick={() => openView(h)}
                 className="grid w-full grid-cols-2 gap-3 border-b border-border bg-hero-surface/50 px-6 py-4 text-left text-sm transition-colors last:border-0 hover:bg-hero-surface md:grid-cols-[1fr_1.4fr_1fr_1.2fr_1fr] md:gap-4"
               >
                 <span className="font-medium text-hero-text">{new Date(h.date).toLocaleDateString('ru')}</span>
@@ -104,6 +114,14 @@ const Hunts = ({ hunterId, events = [], loading, onUpsert }: Props) => {
           )}
         </div>
       </div>
+
+      <HuntEventViewer
+        open={viewOpen}
+        onOpenChange={setViewOpen}
+        event={viewEvent}
+        onEdit={openEdit}
+        onDelete={onRemove}
+      />
 
       <HuntEventEditor
         open={open}

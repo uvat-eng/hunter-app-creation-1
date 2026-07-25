@@ -6,6 +6,7 @@ import type { HuntEventDto } from '@/lib/api';
 import { downloadIcs } from '@/lib/ics';
 import { SPECIES, matchSpecies } from '@/lib/hunt-species';
 import HuntEventEditor from './HuntEventEditor';
+import HuntEventViewer from './HuntEventViewer';
 
 const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const months = [
@@ -27,6 +28,8 @@ const MyCalendar = ({ hunterId, events = [], loading, onUpsert, onRemove }: Prop
   const [open, setOpen] = useState(false);
   const [editEvent, setEditEvent] = useState<HuntEventDto | null>(null);
   const [initialDate, setInitialDate] = useState<string | undefined>(undefined);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [viewEvent, setViewEvent] = useState<HuntEventDto | null>(null);
 
   const days = useMemo(() => {
     const first = new Date(view.y, view.m, 1);
@@ -69,9 +72,15 @@ const MyCalendar = ({ hunterId, events = [], loading, onUpsert, onRemove }: Prop
   };
 
   const openEdit = (ev: HuntEventDto) => {
+    setViewOpen(false);
     setEditEvent(ev);
     setInitialDate(undefined);
     setOpen(true);
+  };
+
+  const openView = (ev: HuntEventDto) => {
+    setViewEvent(ev);
+    setViewOpen(true);
   };
 
   const sorted = [...events].sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -143,7 +152,7 @@ const MyCalendar = ({ hunterId, events = [], loading, onUpsert, onRemove }: Prop
                 return (
                   <button
                     key={i}
-                    onClick={() => (dayEvents.length ? openEdit(dayEvents[0]) : openAdd(dateStr))}
+                    onClick={() => (dayEvents.length ? openView(dayEvents[0]) : openAdd(dateStr))}
                     className={`relative aspect-square rounded-sm text-sm font-medium transition-all ${
                       dayEvents.length
                         ? 'bg-primary/15 text-hero-text hover:bg-primary/25'
@@ -232,7 +241,8 @@ const MyCalendar = ({ hunterId, events = [], loading, onUpsert, onRemove }: Prop
               {sorted.map((ev) => (
                 <div
                   key={ev.id}
-                  className="group rounded-sm border border-border bg-hero-surface p-4 transition-colors hover:border-primary/40"
+                  onClick={() => openView(ev)}
+                  className="group cursor-pointer rounded-sm border border-border bg-hero-surface p-4 transition-colors hover:border-primary/40"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
@@ -252,29 +262,36 @@ const MyCalendar = ({ hunterId, events = [], loading, onUpsert, onRemove }: Prop
                     </div>
                     <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                       <button
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           downloadIcs({
                             title: ev.title,
                             date: ev.date,
                             description: [ev.huntType, ev.notes].filter(Boolean).join(' · '),
                             location: ev.locationName,
                             reminderMinutesBefore: 12 * 60,
-                          })
-                        }
+                          });
+                        }}
                         className="flex h-7 w-7 items-center justify-center rounded-sm border border-border text-hero-muted transition-colors hover:border-primary hover:text-primary"
                         aria-label="В календарь телефона"
                       >
                         <Icon name="CalendarPlus" size={13} />
                       </button>
                       <button
-                        onClick={() => openEdit(ev)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEdit(ev);
+                        }}
                         className="flex h-7 w-7 items-center justify-center rounded-sm border border-border text-hero-muted transition-colors hover:border-primary hover:text-primary"
                         aria-label="Редактировать"
                       >
                         <Icon name="Pencil" size={13} />
                       </button>
                       <button
-                        onClick={() => onRemove(ev.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemove(ev.id);
+                        }}
                         className="flex h-7 w-7 items-center justify-center rounded-sm border border-border text-hero-muted transition-colors hover:border-destructive hover:text-destructive"
                         aria-label="Удалить"
                       >
@@ -310,6 +327,14 @@ const MyCalendar = ({ hunterId, events = [], loading, onUpsert, onRemove }: Prop
           )}
         </div>
       </div>
+
+      <HuntEventViewer
+        open={viewOpen}
+        onOpenChange={setViewOpen}
+        event={viewEvent}
+        onEdit={openEdit}
+        onDelete={onRemove}
+      />
 
       <HuntEventEditor
         open={open}

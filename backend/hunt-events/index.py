@@ -45,6 +45,7 @@ def to_client(d):
         'reminder': d['reminder'],
         'trophies': d['trophies'] if d.get('trophies') else [],
         'photos': d['photos'] if d.get('photos') else [],
+        'videos': d['videos'] if d.get('videos') else [],
         'budget': float(d['budget']) if d.get('budget') is not None else None,
     }
 
@@ -61,18 +62,44 @@ def upload_photo(data_url: str, s3) -> str:
     return f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
 
 
-def process_photos(photos):
-    if not photos:
-        return []
-    s3 = boto3.client(
+def get_s3():
+    return boto3.client(
         's3',
         endpoint_url='https://bucket.poehali.dev',
         aws_access_key_id=os.environ['AWS_ACCESS_KEY_ID'],
         aws_secret_access_key=os.environ['AWS_SECRET_ACCESS_KEY'],
     )
+
+
+def process_photos(photos):
+    if not photos:
+        return []
+    s3 = get_s3()
     result = []
     for p in photos[:5]:
         result.append(upload_photo(p, s3))
+    return result
+
+
+def upload_video(data_url: str, s3) -> str:
+    if not data_url or not data_url.startswith('data:'):
+        return data_url or ''
+    header, encoded = data_url.split(',', 1)
+    content_type = header.split(':')[1].split(';')[0]
+    ext = content_type.split('/')[-1] or 'mp4'
+    data = base64.b64decode(encoded)
+    key = f"hunt-events/video-{uuid.uuid4()}.{ext}"
+    s3.put_object(Bucket='files', Key=key, Body=data, ContentType=content_type)
+    return f"https://cdn.poehali.dev/projects/{os.environ['AWS_ACCESS_KEY_ID']}/bucket/{key}"
+
+
+def process_videos(videos):
+    if not videos:
+        return []
+    s3 = get_s3()
+    result = []
+    for v in videos[:5]:
+        result.append(upload_video(v, s3))
     return result
 
 
@@ -105,11 +132,12 @@ def handler(event: dict, context) -> dict:
         if not hunter_id or not event_date:
             return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'hunterId and date required'})}
         photos = process_photos(body.get('photos') or [])
+        videos = process_videos(body.get('videos') or [])
         q(cur, """
             INSERT INTO hunt_events (
                 hunter_id, title, hunt_type, event_date, status,
-                location_name, lat, lng, region, notes, reminder, trophies, photos, budget
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                location_name, lat, lng, region, notes, reminder, trophies, photos, videos, budget
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING *
         """, (
             hunter_id,
@@ -125,6 +153,7 @@ def handler(event: dict, context) -> dict:
             bool(body.get('reminder', False)),
             json.dumps(body.get('trophies') or []),
             json.dumps(photos),
+            json.dumps(videos),
             body.get('budget'),
         ))
         row = cur.fetchone()
@@ -135,11 +164,12 @@ def handler(event: dict, context) -> dict:
         if not event_id:
             return {'statusCode': 400, 'headers': CORS, 'body': json.dumps({'error': 'id required'})}
         photos = process_photos(body.get('photos') or [])
+        videos = process_videos(body.get('videos') or [])
         q(cur, """
             UPDATE hunt_events SET
                 title = %s, hunt_type = %s, event_date = %s, status = %s,
                 location_name = %s, lat = %s, lng = %s, region = %s, notes = %s,
-                reminder = %s, trophies = %s, photos = %s, budget = %s, updated_at = now()
+                reminder = %s, trophies = %s, photos = %s, videos = %s, budget = %s, updated_at = now()
             WHERE id = %s
             RETURNING *
         """, (
@@ -155,6 +185,7 @@ def handler(event: dict, context) -> dict:
             bool(body.get('reminder', False)),
             json.dumps(body.get('trophies') or []),
             json.dumps(photos),
+            json.dumps(videos),
             body.get('budget'),
             event_id,
         ))

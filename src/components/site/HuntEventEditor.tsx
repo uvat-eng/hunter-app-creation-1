@@ -31,6 +31,7 @@ export const emptyDraft = (): Draft => ({
   reminder: true,
   trophies: [],
   photos: [],
+  videos: [],
   budget: null,
 });
 
@@ -39,8 +40,20 @@ const steps = [
   { title: 'Место', desc: 'Введите адрес — точка на карте появится автоматически, или отметьте вручную' },
   { title: 'Трофеи', desc: 'Что удалось добыть (если охота уже состоялась)' },
   { title: 'Фотографии', desc: 'До 5 фотографий с охоты' },
+  { title: 'Видео', desc: 'До 3 видео с охоты (каждое до 30 МБ)' },
   { title: 'Напоминание', desc: 'Добавить событие в календарь телефона' },
 ];
+
+const MAX_VIDEO_MB = 30;
+const MAX_VIDEOS = 3;
+
+const fileToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 
 const MAX_DIMENSION = 1280;
 const JPEG_QUALITY = 0.72;
@@ -122,6 +135,27 @@ const HuntEventEditor = ({ open, onOpenChange, hunterId, editEvent, initialDate,
 
   const removePhoto = (i: number) => setDraft((d) => ({ ...d, photos: d.photos.filter((_, idx) => idx !== i) }));
 
+  const onVideos = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const room = MAX_VIDEOS - draft.videos.length;
+    const toAdd = files.slice(0, room);
+    const tooBig = toAdd.filter((f) => f.size > MAX_VIDEO_MB * 1024 * 1024);
+    if (tooBig.length) {
+      toast({ title: 'Видео слишком большое', description: `Максимум ${MAX_VIDEO_MB} МБ на файл.` });
+    }
+    const okFiles = toAdd.filter((f) => f.size <= MAX_VIDEO_MB * 1024 * 1024);
+    try {
+      const dataUrls = await Promise.all(okFiles.map(fileToDataUrl));
+      setDraft((d) => ({ ...d, videos: [...d.videos, ...dataUrls] }));
+    } catch {
+      toast({ title: 'Не удалось обработать видео', description: 'Попробуйте другой файл.' });
+    }
+    e.target.value = '';
+  };
+
+  const removeVideo = (i: number) => setDraft((d) => ({ ...d, videos: d.videos.filter((_, idx) => idx !== i) }));
+
   const validateStep0 = () => {
     if (!draft.title.trim() || !draft.date) {
       toast({ title: 'Укажите название и дату события' });
@@ -163,7 +197,7 @@ const HuntEventEditor = ({ open, onOpenChange, hunterId, editEvent, initialDate,
       onOpenChange(false);
     } catch (err) {
       const msg = err instanceof Error && err.message.includes('413')
-        ? 'Слишком большие фотографии — уменьшите их количество или выберите файлы поменьше.'
+        ? 'Слишком большие файлы — уменьшите количество фото/видео или выберите файлы поменьше.'
         : 'Проверьте соединение и попробуйте ещё раз.';
       toast({ title: 'Не удалось сохранить событие', description: msg });
     } finally {
@@ -373,6 +407,36 @@ const HuntEventEditor = ({ open, onOpenChange, hunterId, editEvent, initialDate,
         )}
 
         {step === 4 && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              {draft.videos.map((v, i) => (
+                <div key={i} className="group relative aspect-square overflow-hidden rounded-sm border border-border">
+                  <video src={v} className="h-full w-full object-cover" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <Icon name="Play" size={20} className="text-white" />
+                  </div>
+                  <button
+                    onClick={() => removeVideo(i)}
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    <Icon name="X" size={12} />
+                  </button>
+                </div>
+              ))}
+              {draft.videos.length < MAX_VIDEOS && (
+                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-sm border border-dashed border-border text-hero-muted transition-colors hover:border-primary hover:text-primary">
+                  <Icon name="Video" size={20} />
+                  <input type="file" accept="video/*" multiple onChange={onVideos} className="hidden" />
+                </label>
+              )}
+            </div>
+            <p className="text-xs text-hero-muted">
+              До {MAX_VIDEOS} видео, {MAX_VIDEOS - draft.videos.length} осталось. Максимум {MAX_VIDEO_MB} МБ на файл.
+            </p>
+          </div>
+        )}
+
+        {step === 5 && (
           <div className="space-y-4">
             <button
               type="button"

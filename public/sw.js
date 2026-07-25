@@ -1,6 +1,5 @@
-const CACHE_NAME = 'hunter-diary-v1';
+const CACHE_NAME = 'hunter-diary-v2';
 const SHELL_ASSETS = [
-  '/',
   '/manifest.json',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
@@ -22,6 +21,8 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Сеть в приоритете — кэш только как резерв при отсутствии интернета.
+// HTML/JS/CSS никогда не кэшируем "жадно", чтобы всегда видеть свежую версию.
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
@@ -29,6 +30,24 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/') || url.pathname.includes('functions.poehali.dev')) return;
+
+  const isNavigation = req.mode === 'navigate';
+  const isAsset = /\.(js|css|html)$/.test(url.pathname);
+
+  if (isNavigation || isAsset) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res.ok) {
+            const resClone = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(req)),
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(req).then((cached) => {
