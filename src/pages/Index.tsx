@@ -12,12 +12,14 @@ import Footer from '@/components/site/Footer';
 import HunterOnboarding, { type HunterProfile } from '@/components/site/HunterOnboarding';
 import { huntersApi } from '@/lib/api';
 import { toast } from '@/hooks/use-toast';
+import { useHuntEvents } from '@/hooks/use-hunt-events';
 
 const HUNTER_ID_KEY = 'malyshenskoe_hunter_id';
 
 const Index = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [profile, setProfile] = useState<HunterProfile | null>(null);
+  const { events, loading: eventsLoading, removeEvent, upsertEvent } = useHuntEvents(profile?.id);
 
   useEffect(() => {
     const savedId = localStorage.getItem(HUNTER_ID_KEY);
@@ -54,8 +56,14 @@ const Index = () => {
       <Header onStart={() => setAuthOpen(true)} />
       <Hero onStart={() => setAuthOpen(true)} />
       <Cabinet profile={profile} onStart={() => setAuthOpen(true)} />
-      <MyCalendar hunterId={profile?.id} />
-      <Hunts />
+      <MyCalendar
+        hunterId={profile?.id}
+        events={events}
+        loading={eventsLoading}
+        onUpsert={upsertEvent}
+        onRemove={removeEvent}
+      />
+      <Hunts hunterId={profile?.id} events={events} loading={eventsLoading} onUpsert={upsertEvent} />
       <Gear hunterId={profile?.id} />
       <Estate onBook={() => scrollTo('hunt-choice')} />
       <HuntChoice onPick={() => scrollTo('tours')} />

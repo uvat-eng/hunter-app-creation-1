@@ -1,19 +1,33 @@
 import { useState } from 'react';
 import SectionHeading from './SectionHeading';
 import Icon from '@/components/ui/icon';
-
-const hunts = [
-  { date: '02.10.2024', place: 'Озёрный сектор', game: 'Кряква', result: '4 трофея', tag: 'Перо', budget: '9 400 ₽' },
-  { date: '21.09.2024', place: 'Северный обход', game: 'Гусь', result: '2 трофея', tag: 'Перо', budget: '11 200 ₽' },
-  { date: '14.09.2024', place: 'Кедровая падь', game: 'Кабан', result: 'Трофей 92 кг', tag: 'Копытные', budget: '28 000 ₽' },
-  { date: '31.08.2024', place: 'Луговой участок', game: 'Тетерев', result: '5 трофеев', tag: 'Перо', budget: '7 600 ₽' },
-];
+import type { HuntEventDto } from '@/lib/api';
+import HuntEventEditor from './HuntEventEditor';
 
 const tags = ['Все', 'Перо', 'Копытные'];
 
-const Hunts = () => {
+interface Props {
+  hunterId?: string;
+  events: HuntEventDto[];
+  loading: boolean;
+  onUpsert: (saved: HuntEventDto) => void;
+}
+
+const formatBudget = (n: number | null) => (n ? `${n.toLocaleString('ru')} ₽` : '—');
+
+const Hunts = ({ hunterId, events = [], loading, onUpsert }: Props) => {
   const [filter, setFilter] = useState('Все');
-  const rows = filter === 'Все' ? hunts : hunts.filter((h) => h.tag === filter);
+  const [editEvent, setEditEvent] = useState<HuntEventDto | null>(null);
+  const [open, setOpen] = useState(false);
+
+  const rows = [...events]
+    .filter((h) => filter === 'Все' || h.huntType === filter)
+    .sort((a, b) => (a.date < b.date ? 1 : -1));
+
+  const openEdit = (ev: HuntEventDto) => {
+    setEditEvent(ev);
+    setOpen(true);
+  };
 
   return (
     <section id="hunts" className="border-t border-border bg-hero-bg py-20 md:py-28">
@@ -21,7 +35,7 @@ const Hunts = () => {
         <SectionHeading
           eyebrow="Мои охоты и трофеи"
           title="Дневник выездов"
-          description="Каждый выезд — в учёте: дата, место, добыча и расходы. Ведите статистику сезона за сезоном."
+          description="Дневник формируется автоматически из вашего календаря выездов — каждое добавленное событие сразу появляется здесь. Данные можно уточнить, нажав на строку."
         />
 
         <div className="mb-6 flex flex-wrap gap-2">
@@ -48,26 +62,56 @@ const Hunts = () => {
             <span>Результат</span>
             <span className="text-right">Бюджет</span>
           </div>
-          {rows.map((h, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-2 gap-3 border-b border-border bg-hero-surface/50 px-6 py-4 text-sm transition-colors last:border-0 hover:bg-hero-surface md:grid-cols-[1fr_1.4fr_1fr_1.2fr_1fr] md:gap-4"
-            >
-              <span className="font-medium text-hero-text">{h.date}</span>
-              <span className="flex items-center gap-2 text-hero-muted">
-                <Icon name="MapPin" size={15} className="text-primary" />
-                {h.place}
-              </span>
-              <span className="text-hero-muted">{h.game}</span>
-              <span className="flex items-center gap-2 text-hero-text">
-                <Icon name="Award" size={15} className="text-primary" />
-                {h.result}
-              </span>
-              <span className="text-right font-medium text-hero-text md:text-right">{h.budget}</span>
+
+          {loading ? (
+            <div className="flex items-center justify-center gap-2 bg-hero-surface/50 py-10 text-sm text-hero-muted">
+              <Icon name="Loader2" size={18} className="animate-spin" /> Загружаем…
             </div>
-          ))}
+          ) : !hunterId ? (
+            <div className="flex flex-col items-center gap-2 bg-hero-surface/50 py-10 text-center text-sm text-hero-muted">
+              <Icon name="BookOpen" size={26} className="text-hero-muted" />
+              Заведите карточку охотника и добавьте событие в календарь — дневник заполнится сам.
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 bg-hero-surface/50 py-10 text-center text-sm text-hero-muted">
+              <Icon name="BookOpen" size={26} className="text-hero-muted" />
+              Событий пока нет — добавьте выезд в календаре выше, он появится здесь автоматически.
+            </div>
+          ) : (
+            rows.map((h) => (
+              <button
+                key={h.id}
+                onClick={() => openEdit(h)}
+                className="grid w-full grid-cols-2 gap-3 border-b border-border bg-hero-surface/50 px-6 py-4 text-left text-sm transition-colors last:border-0 hover:bg-hero-surface md:grid-cols-[1fr_1.4fr_1fr_1.2fr_1fr] md:gap-4"
+              >
+                <span className="font-medium text-hero-text">{new Date(h.date).toLocaleDateString('ru')}</span>
+                <span className="flex items-center gap-2 text-hero-muted">
+                  <Icon name="MapPin" size={15} className="text-primary" />
+                  {h.locationName || '—'}
+                </span>
+                <span className="text-hero-muted">{h.huntType}</span>
+                <span className="flex items-center gap-2 text-hero-text">
+                  <Icon name="Award" size={15} className="text-primary" />
+                  {h.trophies.length > 0
+                    ? h.trophies.map((t) => `${t.game} × ${t.count}`).join(', ')
+                    : h.status === 'planned'
+                      ? 'Запланировано'
+                      : 'Без трофеев'}
+                </span>
+                <span className="text-right font-medium text-hero-text md:text-right">{formatBudget(h.budget)}</span>
+              </button>
+            ))
+          )}
         </div>
       </div>
+
+      <HuntEventEditor
+        open={open}
+        onOpenChange={setOpen}
+        hunterId={hunterId}
+        editEvent={editEvent}
+        onSaved={onUpsert}
+      />
     </section>
   );
 };
