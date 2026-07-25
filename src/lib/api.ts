@@ -9,7 +9,7 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(text || `Ошибка запроса: ${res.status}`);
+    throw new Error(`HTTP ${res.status}: ${text || 'Ошибка запроса'}`);
   }
   return res.json();
 }

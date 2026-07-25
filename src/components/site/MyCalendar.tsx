@@ -71,10 +71,35 @@ const steps = [
   { title: 'Напоминание', desc: 'Добавить событие в календарь телефона' },
 ];
 
-const fileToDataUrl = (file: File): Promise<string> =>
+const MAX_DIMENSION = 1280;
+const JPEG_QUALITY = 0.72;
+
+const fileToCompressedDataUrl = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+          const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(String(reader.result));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', JPEG_QUALITY));
+      };
+      img.onerror = reject;
+      img.src = String(reader.result);
+    };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -173,8 +198,12 @@ const MyCalendar = ({ hunterId }: { hunterId?: string }) => {
     if (!files.length) return;
     const room = 5 - draft.photos.length;
     const toAdd = files.slice(0, room);
-    const dataUrls = await Promise.all(toAdd.map(fileToDataUrl));
-    setDraft((d) => ({ ...d, photos: [...d.photos, ...dataUrls] }));
+    try {
+      const dataUrls = await Promise.all(toAdd.map(fileToCompressedDataUrl));
+      setDraft((d) => ({ ...d, photos: [...d.photos, ...dataUrls] }));
+    } catch {
+      toast({ title: 'Не удалось обработать фото', description: 'Попробуйте другой файл.' });
+    }
     e.target.value = '';
   };
 
@@ -217,8 +246,11 @@ const MyCalendar = ({ hunterId }: { hunterId?: string }) => {
         toast({ title: 'Файл события скачан', description: 'Откройте его, чтобы добавить в календарь телефона.' });
       }
       setOpen(false);
-    } catch {
-      toast({ title: 'Не удалось сохранить событие' });
+    } catch (err) {
+      const msg = err instanceof Error && err.message.includes('413')
+        ? 'Слишком большие фотографии — уменьшите их количество или выберите файлы поменьше.'
+        : 'Проверьте соединение и попробуйте ещё раз.';
+      toast({ title: 'Не удалось сохранить событие', description: msg });
     } finally {
       setSaving(false);
     }
