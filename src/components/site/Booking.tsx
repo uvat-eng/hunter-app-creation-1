@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import SectionHeading from './SectionHeading';
 import Icon from '@/components/ui/icon';
 import { toast } from '@/hooks/use-toast';
+import { bookingsApi } from '@/lib/api';
 
 const services = [
   { id: 'lodge', label: 'Проживание в доме', price: 3500 },
@@ -20,11 +21,12 @@ const months = [
 // заранее «занятые» дни для реалистичности
 const busy = [5, 6, 12, 19, 20];
 
-const Booking = () => {
+const Booking = ({ hunterId }: { hunterId?: string }) => {
   const now = new Date();
   const [view, setView] = useState({ y: now.getFullYear(), m: now.getMonth() });
   const [selected, setSelected] = useState<number | null>(null);
   const [chosen, setChosen] = useState<string[]>(['jaeger']);
+  const [submitting, setSubmitting] = useState(false);
 
   const days = useMemo(() => {
     const first = new Date(view.y, view.m, 1);
@@ -50,15 +52,24 @@ const Booking = () => {
 
   const total = chosen.reduce((s, id) => s + (services.find((x) => x.id === id)?.price || 0), 0);
 
-  const submit = () => {
+  const submit = async () => {
     if (!selected) {
       toast({ title: 'Выберите дату', description: 'Отметьте день выезда в календаре.' });
       return;
     }
-    toast({
-      title: 'Заявка на бронь принята',
-      description: `${selected} ${months[view.m].toLowerCase()} · ${total.toLocaleString('ru')} ₽. Егерь свяжется с вами.`,
-    });
+    const dateStr = `${view.y}-${String(view.m + 1).padStart(2, '0')}-${String(selected).padStart(2, '0')}`;
+    setSubmitting(true);
+    try {
+      await bookingsApi.create({ hunterId, date: dateStr, services: chosen, total });
+      toast({
+        title: 'Заявка на бронь принята',
+        description: `${selected} ${months[view.m].toLowerCase()} · ${total.toLocaleString('ru')} ₽. Егерь свяжется с вами.`,
+      });
+    } catch {
+      toast({ title: 'Не удалось отправить заявку', description: 'Попробуйте ещё раз.' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -176,9 +187,11 @@ const Booking = () => {
 
             <button
               onClick={submit}
-              className="mt-6 flex items-center justify-center gap-2 rounded-sm bg-primary py-4 text-sm font-bold text-primary-foreground transition-transform hover:-translate-y-0.5"
+              disabled={submitting}
+              className="mt-6 flex items-center justify-center gap-2 rounded-sm bg-primary py-4 text-sm font-bold text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:opacity-60"
             >
-              Забронировать <Icon name="CalendarCheck" size={18} />
+              {submitting ? 'Отправляем…' : 'Забронировать'}{' '}
+              <Icon name={submitting ? 'Loader2' : 'CalendarCheck'} size={18} className={submitting ? 'animate-spin' : ''} />
             </button>
           </div>
         </div>

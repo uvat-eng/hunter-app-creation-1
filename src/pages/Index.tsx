@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Header from '@/components/site/Header';
 import Hero from '@/components/site/Hero';
 import Cabinet from '@/components/site/Cabinet';
@@ -9,10 +9,39 @@ import Hunts from '@/components/site/Hunts';
 import Gear from '@/components/site/Gear';
 import Footer from '@/components/site/Footer';
 import HunterOnboarding, { type HunterProfile } from '@/components/site/HunterOnboarding';
+import { huntersApi } from '@/lib/api';
+
+const HUNTER_ID_KEY = 'malyshenskoe_hunter_id';
 
 const Index = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [profile, setProfile] = useState<HunterProfile | null>(null);
+
+  useEffect(() => {
+    const savedId = localStorage.getItem(HUNTER_ID_KEY);
+    if (!savedId) return;
+    huntersApi
+      .get(savedId)
+      .then((h) =>
+        setProfile({
+          id: h.id,
+          name: h.name,
+          city: h.city,
+          ticket: h.ticket,
+          ticketDate: h.ticket_date || '',
+          photo: h.photo,
+          experience: h.experience,
+          weapon: h.weapon,
+          game: h.game,
+        }),
+      )
+      .catch(() => localStorage.removeItem(HUNTER_ID_KEY));
+  }, []);
+
+  const handleComplete = (p: HunterProfile) => {
+    setProfile(p);
+    if (p.id) localStorage.setItem(HUNTER_ID_KEY, p.id);
+  };
 
   const openBooking = () => {
     document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' });
@@ -25,12 +54,12 @@ const Index = () => {
       <Cabinet profile={profile} onStart={() => setAuthOpen(true)} />
       <Estate onBook={openBooking} />
       <Tours onBook={openBooking} />
-      <Booking />
+      <Booking hunterId={profile?.id} />
       <Hunts />
-      <Gear />
+      <Gear hunterId={profile?.id} />
       <Footer onStart={() => setAuthOpen(true)} />
 
-      <HunterOnboarding open={authOpen} onOpenChange={setAuthOpen} onComplete={setProfile} />
+      <HunterOnboarding open={authOpen} onOpenChange={setAuthOpen} onComplete={handleComplete} />
     </div>
   );
 };

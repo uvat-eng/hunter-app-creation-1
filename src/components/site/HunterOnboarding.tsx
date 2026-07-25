@@ -10,8 +10,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 import { toast } from '@/hooks/use-toast';
+import { huntersApi } from '@/lib/api';
 
 export interface HunterProfile {
+  id?: string;
   name: string;
   city: string;
   ticket: string;
@@ -34,6 +36,7 @@ const HunterOnboarding = ({
   onComplete: (p: HunterProfile) => void;
 }) => {
   const [step, setStep] = useState(0);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<HunterProfile>({
     name: '',
     city: '',
@@ -69,18 +72,32 @@ const HunterOnboarding = ({
     if (validateStep0()) setStep(1);
   };
 
-  const finish = () => {
+  const finish = async () => {
     if (!form.ticket.trim()) {
       setErrors({ ticket: true });
       return;
     }
-    toast({ title: 'Анкета сохранена', description: 'Личный кабинет открыт ниже.' });
-    onComplete(form);
-    onOpenChange(false);
-    setStep(0);
-    setTimeout(() => {
-      document.getElementById('cabinet')?.scrollIntoView({ behavior: 'smooth' });
-    }, 150);
+    setSaving(true);
+    try {
+      const created = await huntersApi.create(form);
+      const saved: HunterProfile = {
+        ...form,
+        id: created.id,
+        ticketDate: created.ticket_date || form.ticketDate,
+        photo: created.photo || form.photo,
+      };
+      toast({ title: 'Анкета сохранена', description: 'Личный кабинет открыт ниже.' });
+      onComplete(saved);
+      onOpenChange(false);
+      setStep(0);
+      setTimeout(() => {
+        document.getElementById('cabinet')?.scrollIntoView({ behavior: 'smooth' });
+      }, 150);
+    } catch {
+      toast({ title: 'Не удалось сохранить анкету', description: 'Попробуйте ещё раз.' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -228,9 +245,10 @@ const HunterOnboarding = ({
               </button>
               <button
                 onClick={finish}
-                className="flex flex-1 items-center justify-center gap-2 rounded-sm bg-primary py-3 font-bold text-primary-foreground transition-transform hover:-translate-y-0.5"
+                disabled={saving}
+                className="flex flex-1 items-center justify-center gap-2 rounded-sm bg-primary py-3 font-bold text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:opacity-60"
               >
-                Открыть кабинет <Icon name="Check" size={18} />
+                {saving ? 'Сохраняем…' : 'Открыть кабинет'} <Icon name={saving ? 'Loader2' : 'Check'} size={18} className={saving ? 'animate-spin' : ''} />
               </button>
             </div>
           </div>

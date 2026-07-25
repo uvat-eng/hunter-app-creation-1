@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SectionHeading from './SectionHeading';
 import Icon from '@/components/ui/icon';
 import {
@@ -11,24 +11,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
+import { weaponsApi, type WeaponDto, type AccessoryDto } from '@/lib/api';
 
-interface Accessory {
-  name: string;
-  params: string;
-}
-
-interface Weapon {
-  id: string;
-  name: string;
-  caliber: string;
-  permit: string;
-  permitDate: string;
-  optics: Accessory | null;
-  thermal: Accessory | null;
-  collimator: Accessory | null;
-}
-
-type Draft = Omit<Weapon, 'id'>;
+type Draft = Omit<WeaponDto, 'id' | 'hunterId'>;
 
 const emptyDraft = (): Draft => ({
   name: '',
@@ -50,7 +35,7 @@ const steps = [
 
 const accessoryKeys = ['optics', 'thermal', 'collimator'] as const;
 
-const AccessoryRow = ({ icon, label, acc }: { icon: string; label: string; acc: Accessory }) => (
+const AccessoryRow = ({ icon, label, acc }: { icon: string; label: string; acc: AccessoryDto }) => (
   <div className="flex items-start gap-2.5">
     <Icon name={icon} size={15} className="mt-0.5 shrink-0 text-primary" />
     <div>
@@ -62,52 +47,89 @@ const AccessoryRow = ({ icon, label, acc }: { icon: string; label: string; acc: 
   </div>
 );
 
-const Gear = () => {
-  const [weapons, setWeapons] = useState<Weapon[]>([]);
+const Gear = ({ hunterId }: { hunterId?: string }) => {
+  const [weapons, setWeapons] = useState<WeaponDto[]>([]);
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(emptyDraft());
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!hunterId) {
+      setWeapons([]);
+      return;
+    }
+    setLoading(true);
+    weaponsApi
+      .list(hunterId)
+      .then(setWeapons)
+      .catch(() => toast({ title: 'Не удалось загрузить оружейный сейф' }))
+      .finally(() => setLoading(false));
+  }, [hunterId]);
 
   const openAdd = () => {
+    if (!hunterId) {
+      toast({ title: 'Сначала заведите карточку охотника', description: 'Заполните анкету, чтобы вести учёт оружия.' });
+      return;
+    }
     setDraft(emptyDraft());
     setEditId(null);
     setStep(0);
     setOpen(true);
   };
 
-  const openEdit = (w: Weapon) => {
-    const { id, ...rest } = w;
+  const openEdit = (w: WeaponDto) => {
+    const { id, hunterId: _h, ...rest } = w;
     setDraft(rest);
     setEditId(id);
     setStep(0);
     setOpen(true);
   };
 
-  const removeWeapon = (id: string) => {
-    setWeapons((ws) => ws.filter((w) => w.id !== id));
-    toast({ title: 'Оружие удалено из учёта' });
+  const removeWeapon = async (id: string) => {
+    try {
+      await weaponsApi.remove(id);
+      setWeapons((ws) => ws.filter((w) => w.id !== id));
+      toast({ title: 'Оружие удалено из учёта' });
+    } catch {
+      toast({ title: 'Не удалось удалить' });
+    }
   };
 
-  const setAcc = (key: (typeof accessoryKeys)[number], patch: Partial<Accessory>) => {
+  const setAcc = (key: (typeof accessoryKeys)[number], patch: Partial<AccessoryDto>) => {
     setDraft((d) => ({
       ...d,
       [key]: { name: d[key]?.name || '', params: d[key]?.params || '', ...patch },
     }));
   };
 
+  const persist = async (data: Draft) => {
+    if (!hunterId) return;
+    setSaving(true);
+    try {
+      const saved = editId
+        ? await weaponsApi.update(editId, data)
+        : await weaponsApi.create({ ...data, hunterId });
+      setWeapons((ws) => (editId ? ws.map((w) => (w.id === editId ? saved : w)) : [saved, ...ws]));
+      toast({ title: editId ? 'Изменения сохранены' : 'Оружие добавлено в учёт', description: saved.name });
+      setOpen(false);
+    } catch {
+      toast({ title: 'Не удалось сохранить' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const skipAcc = (key: (typeof accessoryKeys)[number]) => {
-    setDraft((d) => {
-      const updated = { ...d, [key]: null };
-      if (step === steps.length - 1) {
-        const weapon: Weapon = { id: editId || crypto.randomUUID(), ...updated };
-        setWeapons((ws) => (editId ? ws.map((w) => (w.id === editId ? weapon : w)) : [weapon, ...ws]));
-        toast({ title: editId ? 'Изменения сохранены' : 'Оружие добавлено в учёт', description: weapon.name });
-        setOpen(false);
-      }
-      return updated;
-    });
-    if (step < steps.length - 1) goNext();
+    const updated = { ...draft, [key]: null };
+    setDraft(updated);
+    if (step === steps.length - 1) {
+      persist(updated);
+    } else {
+      goNext();
+    }
   };
 
   const validateStep = () => {
@@ -130,14 +152,7 @@ const Gear = () => {
     goNext();
   };
 
-  const save = () => {
-    const weapon: Weapon = { id: editId || crypto.randomUUID(), ...draft };
-    setWeapons((ws) =>
-      editId ? ws.map((w) => (w.id === editId ? weapon : w)) : [weapon, ...ws],
-    );
-    toast({ title: editId ? 'Изменения сохранены' : 'Оружие добавлено в учёт', description: weapon.name });
-    setOpen(false);
-  };
+  const save = () => persist(draft);
 
   const isLast = step === steps.length - 1;
   const accKeyForStep = step >= 2 ? accessoryKeys[step - 2] : null;
@@ -152,14 +167,22 @@ const Gear = () => {
           description="Учёт стволов, номера РОХ и сроки разрешений, а также прикреплённая оптика, тепловизоры и коллиматоры."
         />
 
-        {weapons.length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-hero-bg px-6 py-16 text-hero-muted">
+            <Icon name="Loader2" size={20} className="animate-spin" /> Загружаем сейф…
+          </div>
+        ) : weapons.length === 0 ? (
           <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border bg-hero-bg px-6 py-16 text-center">
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/12 text-primary">
               <Icon name="Target" size={26} />
             </span>
             <div>
               <div className="font-head text-lg font-semibold text-hero-text">Пока нет оружия в учёте</div>
-              <p className="mt-1 text-sm text-hero-muted">Добавьте первую единицу — это займёт меньше минуты.</p>
+              <p className="mt-1 text-sm text-hero-muted">
+                {hunterId
+                  ? 'Добавьте первую единицу — это займёт меньше минуты.'
+                  : 'Заведите карточку охотника, чтобы начать учёт.'}
+              </p>
             </div>
             <button
               onClick={openAdd}
@@ -360,7 +383,8 @@ const Gear = () => {
             {accKeyForStep && (
               <button
                 onClick={() => skipAcc(accKeyForStep)}
-                className="flex-1 rounded-sm border border-border py-3 text-sm text-hero-muted transition-colors hover:border-primary/50 hover:text-hero-text"
+                disabled={saving}
+                className="flex-1 rounded-sm border border-border py-3 text-sm text-hero-muted transition-colors hover:border-primary/50 hover:text-hero-text disabled:opacity-60"
               >
                 Отсутствует
               </button>
@@ -369,9 +393,10 @@ const Gear = () => {
             {isLast ? (
               <button
                 onClick={save}
-                className="flex flex-1 items-center justify-center gap-2 rounded-sm bg-primary py-3 font-bold text-primary-foreground transition-transform hover:-translate-y-0.5"
+                disabled={saving}
+                className="flex flex-1 items-center justify-center gap-2 rounded-sm bg-primary py-3 font-bold text-primary-foreground transition-transform hover:-translate-y-0.5 disabled:opacity-60"
               >
-                Сохранить <Icon name="Check" size={18} />
+                {saving ? 'Сохраняем…' : 'Сохранить'} <Icon name={saving ? 'Loader2' : 'Check'} size={18} className={saving ? 'animate-spin' : ''} />
               </button>
             ) : (
               <button
