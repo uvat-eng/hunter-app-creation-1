@@ -16,11 +16,11 @@ const Header = ({ onStart }: { onStart: () => void }) => {
     <header className="fixed top-0 inset-x-0 z-40 border-b border-border/60 bg-hero-bg/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-10">
         <a href="#top" className="flex items-baseline gap-3">
-          <span className="font-head text-xl font-bold tracking-tight text-hero-text md:text-2xl">
-            Личный кабинет
+          <span className="font-head text-xl font-bold uppercase tracking-tight text-hero-text md:text-2xl">
+            Охотник
           </span>
           <span className="hidden text-[0.68rem] uppercase tracking-[0.24em] text-hero-muted sm:inline">
-            Охотника
+            Личный кабинет
           </span>
         </a>
 
