@@ -42,7 +42,7 @@ const Cabinet = ({ profile, onStart }: { profile: HunterProfile | null; onStart:
               </div>
               <div>
                 <span className="text-xs uppercase tracking-[0.2em] text-hero-accent">
-                  Личный кабинет
+                  Карточка охотника
                 </span>
                 <h3 className="font-head text-3xl font-bold tracking-tight text-hero-text">
                   {name}
