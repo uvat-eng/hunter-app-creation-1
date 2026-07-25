@@ -73,9 +73,9 @@ const Hero = ({ onStart }: { onStart: () => void }) => {
               className="inline-block h-[7px] w-[7px] rounded-full bg-hero-accent"
               style={{ animation: 'hero-pulse 2.6s ease-in-out infinite' }}
             />
-            Сезон открыт · осенняя охота по перу
+            Открыты круглый год · вольерная охота на кабана и косулю
           </span>
-          <span className="tabular-nums tracking-[0.06em]">56.9138° N&nbsp;&nbsp;68.4211° E</span>
+          <span className="tabular-nums tracking-[0.06em]">56.7748° N&nbsp;&nbsp;69.0561° E</span>
         </footer>
       </div>
     </section>
