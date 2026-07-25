@@ -39,18 +39,20 @@ const Footer = ({ onStart }: { onStart: () => void }) => (
           <div>
             <div className="mb-3 text-xs uppercase tracking-wide text-hero-muted">Контакты</div>
             <ul className="space-y-2 text-sm text-hero-muted">
-              <li className="flex items-center gap-2"><Icon name="Phone" size={15} className="text-primary" /> +7 (345) 200-00-00</li>
-              <li className="flex items-center gap-2"><Icon name="Mail" size={15} className="text-primary" /> support@hunter-diary.ru</li>
+              <li className="flex items-center gap-2"><Icon name="Phone" size={15} className="text-primary" /> +7 908 878-77-33</li>
+              <li className="flex items-center gap-2"><Icon name="Mail" size={15} className="text-primary" /> kid.tmn.gun@gmail.com</li>
             </ul>
           </div>
         </div>
       </div>
 
       <div className="mt-12 border-t border-border pt-6 text-xs leading-relaxed text-hero-muted">
-        © {new Date().getFullYear()} Личный кабинет охотника. Охотимся с головой, безопасность на охоте — это
-        личная ответственность каждого охотника. Думайте головой, а не стаканом. Не бухайте, соблюдайте правила
-        охоты, они написаны кровью. Всех нас дома ждут семьи, жёны, дети. Пусть охота для каждого охотника будет
-        любимым хобби, а не обременением.
+        Охотимся с головой, безопасность на охоте — это личная ответственность каждого охотника. Думайте головой,
+        а не стаканом. Не бухайте, соблюдайте правила охоты, они написаны кровью. Всех нас дома ждут семьи, жёны,
+        дети. Пусть охота для каждого охотника будет любимым хобби, а не обременением.
+        <br className="hidden sm:block" />
+        Создано коллективом охотничьего хозяйства «Малышенское», с. Малоскаредное, Аромашевский район Тюменской
+        области. {new Date().getFullYear()} год.
       </div>
     </div>
   </footer>
