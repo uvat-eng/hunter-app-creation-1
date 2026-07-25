@@ -30,7 +30,7 @@ const Footer = ({ onStart }: { onStart: () => void }) => (
             <div className="mb-3 text-xs uppercase tracking-wide text-hero-muted">Личный кабинет</div>
             <ul className="space-y-2 text-sm">
               <li><a href="#cabinet" className="text-hero-text transition-colors hover:text-primary">Кабинет</a></li>
-              <li><a href="#booking" className="text-hero-text transition-colors hover:text-primary">Календарь охот</a></li>
+              <li><a href="#calendar" className="text-hero-text transition-colors hover:text-primary">Календарь охот</a></li>
               <li><a href="#gear" className="text-hero-text transition-colors hover:text-primary">Оружие</a></li>
               <li><a href="#hunts" className="text-hero-text transition-colors hover:text-primary">Дневник</a></li>
             </ul>

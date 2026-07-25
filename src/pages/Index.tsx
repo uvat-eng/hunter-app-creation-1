@@ -4,13 +4,14 @@ import Hero from '@/components/site/Hero';
 import Cabinet from '@/components/site/Cabinet';
 import Estate from '@/components/site/Estate';
 import Tours from '@/components/site/Tours';
-import Booking from '@/components/site/Booking';
+import MyCalendar from '@/components/site/MyCalendar';
 import Hunts from '@/components/site/Hunts';
 import Gear from '@/components/site/Gear';
 import HuntChoice from '@/components/site/HuntChoice';
 import Footer from '@/components/site/Footer';
 import HunterOnboarding, { type HunterProfile } from '@/components/site/HunterOnboarding';
 import { huntersApi } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 const HUNTER_ID_KEY = 'malyshenskoe_hunter_id';
 
@@ -53,12 +54,12 @@ const Index = () => {
       <Header onStart={() => setAuthOpen(true)} />
       <Hero onStart={() => setAuthOpen(true)} />
       <Cabinet profile={profile} onStart={() => setAuthOpen(true)} />
-      <Booking hunterId={profile?.id} />
+      <MyCalendar hunterId={profile?.id} />
       <Gear hunterId={profile?.id} />
       <Hunts />
       <Estate onBook={() => scrollTo('hunt-choice')} />
       <HuntChoice onPick={() => scrollTo('tours')} />
-      <Tours onBook={() => scrollTo('booking')} />
+      <Tours onBook={() => toast({ title: 'Бронирование туров скоро будет доступно', description: 'Мы готовим отдельный раздел для брони охотхозяйства.' })} />
       <Footer onStart={() => setAuthOpen(true)} />
 
       <HunterOnboarding open={authOpen} onOpenChange={setAuthOpen} onComplete={handleComplete} />

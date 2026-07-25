@@ -74,3 +74,33 @@ export const bookingsApi = {
   create: (data: Record<string, unknown>) =>
     request<BookingDto>(urls.bookings, { method: 'POST', body: JSON.stringify(data) }),
 };
+
+export interface TrophyDto {
+  game: string;
+  count: string;
+}
+
+export interface HuntEventDto {
+  id: string;
+  hunterId: string;
+  title: string;
+  huntType: string;
+  date: string;
+  status: 'planned' | 'done';
+  locationName: string;
+  mapX: number | null;
+  mapY: number | null;
+  notes: string;
+  reminder: boolean;
+  trophies: TrophyDto[];
+  photos: string[];
+}
+
+export const huntEventsApi = {
+  list: (hunterId: string) => request<HuntEventDto[]>(`${urls['hunt-events']}?hunterId=${hunterId}`),
+  create: (data: Record<string, unknown>) =>
+    request<HuntEventDto>(urls['hunt-events'], { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: Record<string, unknown>) =>
+    request<HuntEventDto>(urls['hunt-events'], { method: 'PUT', body: JSON.stringify({ ...data, id }) }),
+  remove: (id: string) => request<{ ok: boolean }>(`${urls['hunt-events']}?id=${id}`, { method: 'DELETE' }),
+};

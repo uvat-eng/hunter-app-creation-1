@@ -3,7 +3,7 @@ import Icon from '@/components/ui/icon';
 
 const links = [
   { href: '#cabinet', label: 'Кабинет' },
-  { href: '#booking', label: 'Календарь' },
+  { href: '#calendar', label: 'Календарь' },
   { href: '#gear', label: 'Оружие' },
   { href: '#hunts', label: 'Дневник' },
   { href: '#estate', label: 'Хозяйство' },
