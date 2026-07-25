@@ -19,6 +19,7 @@ const YandexPlacePicker = ({ address, lat, lng, onChange }: Props) => {
   const placemarkRef = useRef<any>(null);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [geocodeError, setGeocodeError] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -57,13 +58,19 @@ const YandexPlacePicker = ({ address, lat, lng, onChange }: Props) => {
         map.events.add('click', async (e: any) => {
           const coords = e.get('coords');
           placeMarker(coords[0], coords[1]);
-          const geo = await reverseGeocode(coords[0], coords[1]);
-          onChange({
-            lat: coords[0],
-            lng: coords[1],
-            address: geo?.address,
-            region: geo?.region,
-          });
+          try {
+            const geo = await reverseGeocode(coords[0], coords[1]);
+            onChange({
+              lat: coords[0],
+              lng: coords[1],
+              address: geo?.address,
+              region: geo?.region,
+            });
+            setGeocodeError(false);
+          } catch {
+            onChange({ lat: coords[0], lng: coords[1] });
+            setGeocodeError(true);
+          }
         });
 
         setReady(true);
@@ -116,8 +123,10 @@ const YandexPlacePicker = ({ address, lat, lng, onChange }: Props) => {
         const res = await ymaps.suggest(value);
         setSuggestions(res.map((r: any) => r.displayName || r.value));
         setShowSuggestions(true);
+        setGeocodeError(false);
       } catch {
         setSuggestions([]);
+        setGeocodeError(true);
       }
     }, 300);
   };
@@ -135,8 +144,9 @@ const YandexPlacePicker = ({ address, lat, lng, onChange }: Props) => {
       const region =
         first.getAdministrativeAreas?.()?.[0] || first.getLocalities?.()?.[0] || first.getCountry?.() || '';
       onChange({ address: first.getAddressLine(), lat: pickedLat, lng: pickedLng, region });
+      setGeocodeError(false);
     } catch {
-      /* ignore */
+      setGeocodeError(true);
     }
   };
 
@@ -174,6 +184,14 @@ const YandexPlacePicker = ({ address, lat, lng, onChange }: Props) => {
         </div>
       ) : (
         <div ref={mapRef} className="h-72 w-full overflow-hidden rounded-sm border border-border" />
+      )}
+
+      {geocodeError && (
+        <div className="flex items-start gap-2 rounded-sm border border-dashed border-border bg-hero-bg px-4 py-3 text-xs text-hero-muted">
+          <Icon name="TriangleAlert" size={14} className="mt-0.5 shrink-0" />
+          Поиск адреса пока недоступен — ключ карт активируется на стороне Яндекса (обычно занимает до 1 часа
+          после создания). Точку можно поставить кликом по карте — координаты сохранятся.
+        </div>
       )}
 
       {lat !== null && lng !== null && (

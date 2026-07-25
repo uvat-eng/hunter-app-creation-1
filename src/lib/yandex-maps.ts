@@ -1,4 +1,4 @@
-export const YANDEX_MAPS_API_KEY = '73d511e1-86bb-433f-a0cf-0959e59b8883';
+export const YANDEX_MAPS_API_KEY = '123321dd-b170-4cdb-86f0-718a212ee231';
 
 let loadPromise: Promise<void> | null = null;
 
