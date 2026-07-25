@@ -46,8 +46,11 @@ const Footer = ({ onStart }: { onStart: () => void }) => (
         </div>
       </div>
 
-      <div className="mt-12 border-t border-border pt-6 text-xs text-hero-muted">
-        © {new Date().getFullYear()} Личный кабинет охотника. Охотьтесь ответственно.
+      <div className="mt-12 border-t border-border pt-6 text-xs leading-relaxed text-hero-muted">
+        © {new Date().getFullYear()} Личный кабинет охотника. Охотимся с головой, безопасность на охоте — это
+        личная ответственность каждого охотника. Думайте головой, а не стаканом. Не бухайте, соблюдайте правила
+        охоты, они написаны кровью. Всех нас дома ждут семьи, жёны, дети. Пусть охота для каждого охотника будет
+        любимым хобби, а не обременением.
       </div>
     </div>
   </footer>
