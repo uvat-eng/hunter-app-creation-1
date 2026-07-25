@@ -1,0 +1,1 @@
+ALTER TABLE hunt_events ADD COLUMN videos jsonb NULL DEFAULT '[]'::jsonb;
