@@ -55,8 +55,8 @@ const Index = () => {
       <Hero onStart={() => setAuthOpen(true)} />
       <Cabinet profile={profile} onStart={() => setAuthOpen(true)} />
       <MyCalendar hunterId={profile?.id} />
-      <Gear hunterId={profile?.id} />
       <Hunts />
+      <Gear hunterId={profile?.id} />
       <Estate onBook={() => scrollTo('hunt-choice')} />
       <HuntChoice onPick={() => scrollTo('tours')} />
       <Tours onBook={() => toast({ title: 'Бронирование туров скоро будет доступно', description: 'Мы готовим отдельный раздел для брони охотхозяйства.' })} />
