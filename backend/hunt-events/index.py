@@ -44,6 +44,7 @@ def to_client(d):
         'reminder': d['reminder'],
         'trophies': d['trophies'] if d.get('trophies') else [],
         'photos': d['photos'] if d.get('photos') else [],
+        'budget': float(d['budget']) if d.get('budget') is not None else None,
     }
 
 
@@ -106,8 +107,8 @@ def handler(event: dict, context) -> dict:
         q(cur, """
             INSERT INTO hunt_events (
                 hunter_id, title, hunt_type, event_date, status,
-                location_name, map_x, map_y, notes, reminder, trophies, photos
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                location_name, map_x, map_y, notes, reminder, trophies, photos, budget
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING *
         """, (
             hunter_id,
@@ -122,6 +123,7 @@ def handler(event: dict, context) -> dict:
             bool(body.get('reminder', False)),
             json.dumps(body.get('trophies') or []),
             json.dumps(photos),
+            body.get('budget'),
         ))
         row = cur.fetchone()
         return {'statusCode': 201, 'headers': CORS, 'body': json.dumps(to_client(row_to_dict(cur, row)), ensure_ascii=False)}
@@ -135,7 +137,7 @@ def handler(event: dict, context) -> dict:
             UPDATE hunt_events SET
                 title = %s, hunt_type = %s, event_date = %s, status = %s,
                 location_name = %s, map_x = %s, map_y = %s, notes = %s,
-                reminder = %s, trophies = %s, photos = %s, updated_at = now()
+                reminder = %s, trophies = %s, photos = %s, budget = %s, updated_at = now()
             WHERE id = %s
             RETURNING *
         """, (
@@ -150,6 +152,7 @@ def handler(event: dict, context) -> dict:
             bool(body.get('reminder', False)),
             json.dumps(body.get('trophies') or []),
             json.dumps(photos),
+            body.get('budget'),
             event_id,
         ))
         row = cur.fetchone()

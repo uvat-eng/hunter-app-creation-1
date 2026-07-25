@@ -94,6 +94,7 @@ export interface HuntEventDto {
   reminder: boolean;
   trophies: TrophyDto[];
   photos: string[];
+  budget: number | null;
 }
 
 export const huntEventsApi = {

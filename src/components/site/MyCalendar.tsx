@@ -30,6 +30,7 @@ const emptyDraft = (): Draft => ({
   reminder: true,
   trophies: [],
   photos: [],
+  budget: null,
 });
 
 const huntTypes = ['Перо', 'Копытные', 'Пушнина', 'Заяц', 'Кабан', 'Лось', 'Другое'];
@@ -274,6 +275,11 @@ const MyCalendar = ({ hunterId }: { hunterId?: string }) => {
     return counts;
   }, [events]);
 
+  const totalBudget = useMemo(
+    () => events.reduce((sum, ev) => sum + (ev.budget || 0), 0),
+    [events],
+  );
+
   return (
     <section id="calendar" className="border-t border-border bg-hero-surface py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-5 md:px-10">
@@ -376,6 +382,13 @@ const MyCalendar = ({ hunterId }: { hunterId?: string }) => {
                   <span className="shrink-0 font-head text-lg font-bold text-primary">{bag.get(s.key) || 0}</span>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-5 rounded-sm border border-border bg-hero-surface px-4 py-3">
+              <div className="text-xs uppercase tracking-wide text-hero-muted">Общий бюджет охот</div>
+              <div className="mt-1 font-head text-2xl font-bold text-primary">
+                {totalBudget.toLocaleString('ru')} ₽
+              </div>
             </div>
           </div>
         </div>
@@ -562,6 +575,24 @@ const MyCalendar = ({ hunterId }: { hunterId?: string }) => {
                     <Icon name="CheckCircle2" size={14} className="mr-1.5 inline" /> Состоялась
                   </button>
                 </div>
+              </div>
+              <div>
+                <Label htmlFor="ev-budget" className="text-hero-muted">
+                  {draft.status === 'done' ? 'Фактические затраты, ₽' : 'Плановый бюджет, ₽'}
+                </Label>
+                <Input
+                  id="ev-budget"
+                  type="number"
+                  min="0"
+                  step="1"
+                  inputMode="numeric"
+                  value={draft.budget ?? ''}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, budget: e.target.value === '' ? null : Number(e.target.value) }))
+                  }
+                  placeholder="0"
+                  className="mt-1.5 border-border bg-hero-bg"
+                />
               </div>
               <div>
                 <Label htmlFor="ev-notes" className="text-hero-muted">Заметка</Label>
