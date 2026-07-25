@@ -49,6 +49,8 @@ export interface WeaponDto {
   optics: AccessoryDto | null;
   thermal: AccessoryDto | null;
   collimator: AccessoryDto | null;
+  photo: string;
+  permitPhoto: string;
 }
 
 export const weaponsApi = {
@@ -58,6 +60,27 @@ export const weaponsApi = {
   update: (id: string, data: Record<string, unknown>) =>
     request<WeaponDto>(urls.weapons, { method: 'PUT', body: JSON.stringify({ ...data, id }) }),
   remove: (id: string) => request<{ ok: boolean }>(`${urls.weapons}?id=${id}`, { method: 'DELETE' }),
+};
+
+export interface MedicalCertificateDto {
+  id: string;
+  hunterId: string;
+  number: string;
+  issueDate: string;
+  expiresDate: string;
+  photo: string;
+}
+
+export const medicalCertificatesApi = {
+  get: (hunterId: string) =>
+    request<MedicalCertificateDto | null>(`${urls['medical-certificates']}?hunterId=${hunterId}`),
+  create: (data: Record<string, unknown>) =>
+    request<MedicalCertificateDto>(urls['medical-certificates'], { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: Record<string, unknown>) =>
+    request<MedicalCertificateDto>(urls['medical-certificates'], {
+      method: 'PUT',
+      body: JSON.stringify({ ...data, id }),
+    }),
 };
 
 export interface BookingDto {

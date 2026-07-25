@@ -1,0 +1,25 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200
+    },
+    {
+      "name": "GET without hunterId returns 400",
+      "method": "GET",
+      "path": "/",
+      "expectedStatus": 400
+    },
+    {
+      "name": "POST without hunterId returns 400",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "number": "123456"
+      },
+      "expectedStatus": 400
+    }
+  ]
+}

@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { weaponsApi, type WeaponDto, type AccessoryDto } from '@/lib/api';
+import PhotoUploadSlot from './PhotoUploadSlot';
+import MedicalCertificateCard from './MedicalCertificateCard';
 
 type Draft = Omit<WeaponDto, 'id' | 'hunterId'>;
 
@@ -23,11 +25,13 @@ const emptyDraft = (): Draft => ({
   optics: null,
   thermal: null,
   collimator: null,
+  photo: '',
+  permitPhoto: '',
 });
 
 const steps = [
-  { title: 'Марка и калибр', desc: 'Как называется оружие и какой у него калибр' },
-  { title: 'Номер разрешения', desc: 'Номер и дата выдачи РОХа' },
+  { title: 'Марка и калибр', desc: 'Как называется оружие, калибр и фото ствола' },
+  { title: 'Номер разрешения', desc: 'Номер, дата выдачи и фото РОХа' },
   { title: 'Оптика', desc: 'Прицел, если установлен. Если нет — можно пропустить', icon: 'Telescope' },
   { title: 'Тепловизор', desc: 'Насадка или прицел, если есть. Если нет — можно пропустить', icon: 'Flame' },
   { title: 'Коллиматор', desc: 'Коллиматорный прицел, если есть. Если нет — можно пропустить', icon: 'ScanEye' },
@@ -164,7 +168,7 @@ const Gear = ({ hunterId }: { hunterId?: string }) => {
         <SectionHeading
           eyebrow="Моё оружие и снаряжение"
           title="Оружейный сейф"
-          description="Учёт стволов, номера РОХ и сроки разрешений, а также прикреплённая оптика, тепловизоры и коллиматоры."
+          description="Учёт стволов с фото, номера и фото разрешений РОХ, а также прикреплённая оптика, тепловизоры, коллиматоры и медицинская справка."
         />
 
         {loading ? (
@@ -199,9 +203,13 @@ const Gear = ({ hunterId }: { hunterId?: string }) => {
                 className="group relative rounded-lg border border-border bg-hero-bg p-6 transition-all hover:-translate-y-1 hover:border-primary/50"
               >
                 <div className="flex items-center justify-between">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-sm bg-primary/12 text-primary">
-                    <Icon name="Target" size={24} />
-                  </span>
+                  {w.photo ? (
+                    <img src={w.photo} alt={w.name} className="h-12 w-12 rounded-sm object-cover" />
+                  ) : (
+                    <span className="flex h-12 w-12 items-center justify-center rounded-sm bg-primary/12 text-primary">
+                      <Icon name="Target" size={24} />
+                    </span>
+                  )}
                   <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <button
                       onClick={() => openEdit(w)}
@@ -227,6 +235,16 @@ const Gear = ({ hunterId }: { hunterId?: string }) => {
                   <div className="flex items-center gap-2">
                     <Icon name="ShieldCheck" size={16} className="shrink-0 text-primary" />
                     {w.permit}
+                    {w.permitPhoto && (
+                      <a
+                        href={w.permitPhoto}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="ml-1 text-xs text-primary underline-offset-2 hover:underline"
+                      >
+                        фото
+                      </a>
+                    )}
                   </div>
                   {w.permitDate && (
                     <div className="flex items-center gap-2">
@@ -256,7 +274,11 @@ const Gear = ({ hunterId }: { hunterId?: string }) => {
           </div>
         )}
 
-        <div className="mt-6 flex items-center gap-3 rounded-lg border border-border bg-hero-bg p-5 text-sm text-hero-muted">
+        <div className="mt-6">
+          <MedicalCertificateCard hunterId={hunterId} />
+        </div>
+
+        <div className="mt-4 flex items-center gap-3 rounded-lg border border-border bg-hero-bg p-5 text-sm text-hero-muted">
           <Icon name="BellRing" size={20} className="shrink-0 text-primary" />
           Приложение напомнит о продлении разрешений за 60 дней до окончания срока.
         </div>
@@ -305,31 +327,45 @@ const Gear = ({ hunterId }: { hunterId?: string }) => {
                   className="mt-1.5 border-border bg-hero-bg"
                 />
               </div>
+              <PhotoUploadSlot
+                label="Фото оружия"
+                photo={draft.photo}
+                onChange={(v) => setDraft((d) => ({ ...d, photo: v }))}
+                icon="Target"
+              />
             </div>
           )}
 
           {step === 1 && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="w-permit" className="text-hero-muted">Номер РОХа</Label>
-                <Input
-                  id="w-permit"
-                  value={draft.permit}
-                  onChange={(e) => setDraft((d) => ({ ...d, permit: e.target.value }))}
-                  placeholder="№ 1234567"
-                  className="mt-1.5 border-border bg-hero-bg"
-                />
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="w-permit" className="text-hero-muted">Номер РОХа</Label>
+                  <Input
+                    id="w-permit"
+                    value={draft.permit}
+                    onChange={(e) => setDraft((d) => ({ ...d, permit: e.target.value }))}
+                    placeholder="№ 1234567"
+                    className="mt-1.5 border-border bg-hero-bg"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="w-permit-date" className="text-hero-muted">Дата выдачи</Label>
+                  <Input
+                    id="w-permit-date"
+                    type="date"
+                    value={draft.permitDate}
+                    onChange={(e) => setDraft((d) => ({ ...d, permitDate: e.target.value }))}
+                    className="mt-1.5 border-border bg-hero-bg"
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="w-permit-date" className="text-hero-muted">Дата выдачи</Label>
-                <Input
-                  id="w-permit-date"
-                  type="date"
-                  value={draft.permitDate}
-                  onChange={(e) => setDraft((d) => ({ ...d, permitDate: e.target.value }))}
-                  className="mt-1.5 border-border bg-hero-bg"
-                />
-              </div>
+              <PhotoUploadSlot
+                label="Фото разрешения (РОХа)"
+                photo={draft.permitPhoto}
+                onChange={(v) => setDraft((d) => ({ ...d, permitPhoto: v }))}
+                icon="ShieldCheck"
+              />
             </div>
           )}
 
