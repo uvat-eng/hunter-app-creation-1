@@ -19,8 +19,6 @@ const stats = [
 
 const Cabinet = ({ profile, onStart }: { profile: HunterProfile | null; onStart: () => void }) => {
   const name = profile?.name || 'Иван Малышев';
-  const city = profile?.city || 'Тюмень';
-  const game = profile?.game || 'Перо';
   const ticket = profile?.ticket || '№ 72 004518';
   const ticketDate = profile?.ticketDate
     ? new Date(profile.ticketDate).toLocaleDateString('ru')
@@ -50,9 +48,6 @@ const Cabinet = ({ profile, onStart }: { profile: HunterProfile | null; onStart:
                 <h3 className="font-head text-3xl font-bold tracking-tight text-hero-text">
                   {name}
                 </h3>
-                <p className="text-hero-muted">
-                  {city} · охота по «{game}»
-                </p>
               </div>
             </div>
 
