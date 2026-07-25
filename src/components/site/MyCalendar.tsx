@@ -34,6 +34,29 @@ const emptyDraft = (): Draft => ({
 
 const huntTypes = ['Перо', 'Копытные', 'Пушнина', 'Заяц', 'Кабан', 'Лось', 'Другое'];
 
+const SPECIES = [
+  { key: 'moose', label: 'Лось', match: ['лос'], icon: 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/447a74f5-7026-4c0f-88fe-3b65c0c9eeb8.jpg' },
+  { key: 'roe', label: 'Косуля', match: ['косул'], icon: 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/0bd53a4f-4857-4166-9079-da641161665e.jpg' },
+  { key: 'boar', label: 'Кабан', match: ['кабан', 'вепр'], icon: 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/4265ab49-61d8-4a4b-9eae-f86fb5ccf6e8.jpg' },
+  { key: 'lynx', label: 'Рысь', match: ['рысь', 'рыс'], icon: 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/b11f484b-3c29-4f77-9b1b-e5206feab5ce.jpg' },
+  { key: 'wolf', label: 'Волк', match: ['волк', 'волч'], icon: 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/a74be7ee-3caa-448e-b296-cbe0060df08e.jpg' },
+  { key: 'bear', label: 'Медведь', match: ['медвед'], icon: 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/1bb91a26-7f33-48d4-9567-0205657d139f.jpg' },
+  { key: 'duck', label: 'Утки', match: ['утк', 'кряк'], icon: 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/1d5d70fd-30b8-4548-b3ff-657420f75182.jpg' },
+  { key: 'goose', label: 'Гуси', match: ['гус'], icon: 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/da3c22d7-4009-40a1-a700-30f634d49a56.jpg' },
+  { key: 'musk', label: 'Кабарга', match: ['кабарг'], icon: 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/8b7ac197-f59a-4bd6-b6e8-37a3a325fb2a.jpg' },
+  { key: 'beaver', label: 'Бобёр', match: ['бобр', 'бобер', 'бобё'], icon: 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/4f7e9b9c-2512-4016-a553-373956342b1b.jpg' },
+  { key: 'wolverine', label: 'Росомаха', match: ['росомах'], icon: 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/6421fde9-abf4-47b1-a9f0-3cc1b221ce59.jpg' },
+  { key: 'other', label: 'Иные', match: [], icon: 'https://cdn.poehali.dev/projects/5f7ac438-464f-49d1-a914-76a5b9375da3/files/f564d534-d007-454f-92fb-e592a94bdbe9.jpg' },
+] as const;
+
+const matchSpecies = (game: string) => {
+  const g = game.toLowerCase();
+  for (const s of SPECIES) {
+    if (s.match.some((m) => g.includes(m))) return s.key;
+  }
+  return 'other';
+};
+
 const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const months = [
   'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
@@ -204,6 +227,21 @@ const MyCalendar = ({ hunterId }: { hunterId?: string }) => {
   const isLast = step === steps.length - 1;
   const sorted = [...events].sort((a, b) => (a.date < b.date ? 1 : -1));
 
+  const bag = useMemo(() => {
+    const counts = new Map<string, number>();
+    events
+      .filter((ev) => ev.status === 'done')
+      .forEach((ev) => {
+        ev.trophies.forEach((t) => {
+          if (!t.game.trim()) return;
+          const key = matchSpecies(t.game);
+          const n = parseInt(t.count, 10) || 1;
+          counts.set(key, (counts.get(key) || 0) + n);
+        });
+      });
+    return counts;
+  }, [events]);
+
   return (
     <section id="calendar" className="border-t border-border bg-hero-surface py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-5 md:px-10">
@@ -287,106 +325,128 @@ const MyCalendar = ({ hunterId }: { hunterId?: string }) => {
             </button>
           </div>
 
-          {/* список событий */}
+          {/* таблица добычи по видам */}
           <div className="flex flex-col rounded-lg border border-border bg-hero-bg p-6 md:p-8">
-            <div className="font-head text-lg font-semibold text-hero-text">Мои события</div>
+            <div className="font-head text-lg font-semibold uppercase tracking-wide text-hero-text">Добыто</div>
+            <div className="mt-4 grid grid-cols-2 gap-2.5">
+              {SPECIES.map((s) => (
+                <div
+                  key={s.key}
+                  className="flex items-center justify-between gap-2 rounded-sm border border-border bg-hero-surface px-3 py-2.5"
+                >
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span
+                      className="h-8 w-8 shrink-0 rounded-sm border border-border bg-hero-bg bg-contain bg-center bg-no-repeat"
+                      style={{ backgroundImage: `url(${s.icon})` }}
+                    />
+                    <span className="truncate text-sm text-hero-text">{s.label}</span>
+                  </span>
+                  <span className="shrink-0 font-head text-lg font-bold text-primary">{bag.get(s.key) || 0}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-            {loading ? (
-              <div className="mt-6 flex items-center justify-center gap-2 py-10 text-hero-muted">
-                <Icon name="Loader2" size={18} className="animate-spin" /> Загружаем…
-              </div>
-            ) : !hunterId ? (
-              <div className="mt-6 flex flex-col items-center gap-2 py-10 text-center text-sm text-hero-muted">
-                <Icon name="CalendarOff" size={26} className="text-hero-muted" />
-                Заведите карточку охотника, чтобы вести дневник охот.
-              </div>
-            ) : sorted.length === 0 ? (
-              <div className="mt-6 flex flex-col items-center gap-2 py-10 text-center text-sm text-hero-muted">
-                <Icon name="CalendarPlus" size={26} className="text-hero-muted" />
-                Событий пока нет — добавьте первую охоту.
-              </div>
-            ) : (
-              <div className="mt-4 max-h-[520px] space-y-3 overflow-y-auto pr-1">
-                {sorted.map((ev) => (
-                  <div
-                    key={ev.id}
-                    className="group rounded-sm border border-border bg-hero-surface p-4 transition-colors hover:border-primary/40"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`h-2 w-2 rounded-full ${ev.status === 'planned' ? 'bg-primary' : 'bg-hero-muted'}`}
-                          />
-                          <span className="text-xs uppercase tracking-wide text-hero-muted">
-                            {ev.status === 'planned' ? 'Запланировано' : 'Состоялось'} · {ev.huntType}
-                          </span>
-                        </div>
-                        <div className="mt-1 font-head text-lg font-semibold text-hero-text">{ev.title}</div>
-                        <div className="text-sm text-hero-muted">
-                          {new Date(ev.date).toLocaleDateString('ru')}
-                          {ev.locationName ? ` · ${ev.locationName}` : ''}
-                        </div>
+        {/* список событий */}
+        <div className="mt-6 rounded-lg border border-border bg-hero-bg p-6 md:p-8">
+          <div className="font-head text-lg font-semibold text-hero-text">Мои события</div>
+
+          {loading ? (
+            <div className="mt-6 flex items-center justify-center gap-2 py-10 text-hero-muted">
+              <Icon name="Loader2" size={18} className="animate-spin" /> Загружаем…
+            </div>
+          ) : !hunterId ? (
+            <div className="mt-6 flex flex-col items-center gap-2 py-10 text-center text-sm text-hero-muted">
+              <Icon name="CalendarOff" size={26} className="text-hero-muted" />
+              Заведите карточку охотника, чтобы вести дневник охот.
+            </div>
+          ) : sorted.length === 0 ? (
+            <div className="mt-6 flex flex-col items-center gap-2 py-10 text-center text-sm text-hero-muted">
+              <Icon name="CalendarPlus" size={26} className="text-hero-muted" />
+              Событий пока нет — добавьте первую охоту.
+            </div>
+          ) : (
+            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {sorted.map((ev) => (
+                <div
+                  key={ev.id}
+                  className="group rounded-sm border border-border bg-hero-surface p-4 transition-colors hover:border-primary/40"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`h-2 w-2 rounded-full ${ev.status === 'planned' ? 'bg-primary' : 'bg-hero-muted'}`}
+                        />
+                        <span className="text-xs uppercase tracking-wide text-hero-muted">
+                          {ev.status === 'planned' ? 'Запланировано' : 'Состоялось'} · {ev.huntType}
+                        </span>
                       </div>
-                      <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        <button
-                          onClick={() =>
-                            downloadIcs({
-                              title: ev.title,
-                              date: ev.date,
-                              description: [ev.huntType, ev.notes].filter(Boolean).join(' · '),
-                              location: ev.locationName,
-                              reminderMinutesBefore: 12 * 60,
-                            })
-                          }
-                          className="flex h-7 w-7 items-center justify-center rounded-sm border border-border text-hero-muted transition-colors hover:border-primary hover:text-primary"
-                          aria-label="В календарь телефона"
-                        >
-                          <Icon name="CalendarPlus" size={13} />
-                        </button>
-                        <button
-                          onClick={() => openEdit(ev)}
-                          className="flex h-7 w-7 items-center justify-center rounded-sm border border-border text-hero-muted transition-colors hover:border-primary hover:text-primary"
-                          aria-label="Редактировать"
-                        >
-                          <Icon name="Pencil" size={13} />
-                        </button>
-                        <button
-                          onClick={() => removeEvent(ev.id)}
-                          className="flex h-7 w-7 items-center justify-center rounded-sm border border-border text-hero-muted transition-colors hover:border-destructive hover:text-destructive"
-                          aria-label="Удалить"
-                        >
-                          <Icon name="Trash2" size={13} />
-                        </button>
+                      <div className="mt-1 font-head text-lg font-semibold text-hero-text">{ev.title}</div>
+                      <div className="text-sm text-hero-muted">
+                        {new Date(ev.date).toLocaleDateString('ru')}
+                        {ev.locationName ? ` · ${ev.locationName}` : ''}
                       </div>
                     </div>
-
-                    {ev.trophies.length > 0 && (
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {ev.trophies.map((t, i) => (
-                          <span
-                            key={i}
-                            className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-hero-muted"
-                          >
-                            <Icon name="Award" size={11} className="text-primary" />
-                            {t.game} × {t.count}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {ev.photos.length > 0 && (
-                      <div className="mt-3 flex gap-1.5">
-                        {ev.photos.map((p, i) => (
-                          <img key={i} src={p} alt="" className="h-12 w-12 rounded-sm object-cover" />
-                        ))}
-                      </div>
-                    )}
+                    <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <button
+                        onClick={() =>
+                          downloadIcs({
+                            title: ev.title,
+                            date: ev.date,
+                            description: [ev.huntType, ev.notes].filter(Boolean).join(' · '),
+                            location: ev.locationName,
+                            reminderMinutesBefore: 12 * 60,
+                          })
+                        }
+                        className="flex h-7 w-7 items-center justify-center rounded-sm border border-border text-hero-muted transition-colors hover:border-primary hover:text-primary"
+                        aria-label="В календарь телефона"
+                      >
+                        <Icon name="CalendarPlus" size={13} />
+                      </button>
+                      <button
+                        onClick={() => openEdit(ev)}
+                        className="flex h-7 w-7 items-center justify-center rounded-sm border border-border text-hero-muted transition-colors hover:border-primary hover:text-primary"
+                        aria-label="Редактировать"
+                      >
+                        <Icon name="Pencil" size={13} />
+                      </button>
+                      <button
+                        onClick={() => removeEvent(ev.id)}
+                        className="flex h-7 w-7 items-center justify-center rounded-sm border border-border text-hero-muted transition-colors hover:border-destructive hover:text-destructive"
+                        aria-label="Удалить"
+                      >
+                        <Icon name="Trash2" size={13} />
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+
+                  {ev.trophies.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {ev.trophies.map((t, i) => (
+                        <span
+                          key={i}
+                          className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-hero-muted"
+                        >
+                          <Icon name="Award" size={11} className="text-primary" />
+                          {t.game} × {t.count}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {ev.photos.length > 0 && (
+                    <div className="mt-3 flex gap-1.5">
+                      {ev.photos.map((p, i) => (
+                        <img key={i} src={p} alt="" className="h-12 w-12 rounded-sm object-cover" />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
