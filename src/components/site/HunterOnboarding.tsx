@@ -15,6 +15,8 @@ export interface HunterProfile {
   name: string;
   city: string;
   ticket: string;
+  ticketDate: string;
+  photo: string;
   experience: string;
   weapon: string;
   game: string;
@@ -36,6 +38,8 @@ const HunterOnboarding = ({
     name: '',
     city: '',
     ticket: '',
+    ticketDate: '',
+    photo: '',
     experience: '',
     weapon: '',
     game: 'Перо',
@@ -43,6 +47,14 @@ const HunterOnboarding = ({
   const [errors, setErrors] = useState<Record<string, boolean>>({});
 
   const set = (k: keyof HunterProfile, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const onPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => set('photo', String(reader.result));
+    reader.readAsDataURL(file);
+  };
 
   const validateStep0 = () => {
     const e = {
@@ -98,6 +110,20 @@ const HunterOnboarding = ({
 
         {step === 0 ? (
           <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <label className="group relative flex h-20 w-20 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-dashed border-border bg-hero-bg transition-colors hover:border-primary">
+                {form.photo ? (
+                  <img src={form.photo} alt="Фото охотника" className="h-full w-full object-cover" />
+                ) : (
+                  <Icon name="Camera" size={22} className="text-hero-muted transition-colors group-hover:text-primary" />
+                )}
+                <input type="file" accept="image/*" onChange={onPhoto} className="hidden" />
+              </label>
+              <div className="text-sm text-hero-muted">
+                Фото охотника
+                <div className="text-xs">Нажмите на кружок, чтобы загрузить</div>
+              </div>
+            </div>
             <div>
               <Label htmlFor="name" className="text-hero-muted">Имя и фамилия</Label>
               <Input
@@ -129,16 +155,28 @@ const HunterOnboarding = ({
           </div>
         ) : (
           <div className="space-y-4">
-            <div>
-              <Label htmlFor="ticket" className="text-hero-muted">Охотничий билет</Label>
-              <Input
-                id="ticket"
-                value={form.ticket}
-                onChange={(e) => set('ticket', e.target.value)}
-                placeholder="№ 72 000000"
-                className={`mt-1.5 border-border bg-hero-bg ${errors.ticket ? 'border-destructive' : ''}`}
-              />
-              {errors.ticket && <p className="mt-1 text-xs text-destructive">Укажите номер билета</p>}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="ticket" className="text-hero-muted">Охотничий билет</Label>
+                <Input
+                  id="ticket"
+                  value={form.ticket}
+                  onChange={(e) => set('ticket', e.target.value)}
+                  placeholder="№ 72 000000"
+                  className={`mt-1.5 border-border bg-hero-bg ${errors.ticket ? 'border-destructive' : ''}`}
+                />
+                {errors.ticket && <p className="mt-1 text-xs text-destructive">Укажите номер</p>}
+              </div>
+              <div>
+                <Label htmlFor="ticketDate" className="text-hero-muted">Дата выдачи</Label>
+                <Input
+                  id="ticketDate"
+                  type="date"
+                  value={form.ticketDate}
+                  onChange={(e) => set('ticketDate', e.target.value)}
+                  className="mt-1.5 border-border bg-hero-bg"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>

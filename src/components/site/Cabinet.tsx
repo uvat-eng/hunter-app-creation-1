@@ -21,6 +21,11 @@ const Cabinet = ({ profile, onStart }: { profile: HunterProfile | null; onStart:
   const name = profile?.name || 'Иван Малышев';
   const city = profile?.city || 'Тюмень';
   const game = profile?.game || 'Перо';
+  const ticket = profile?.ticket || '№ 72 004518';
+  const ticketDate = profile?.ticketDate
+    ? new Date(profile.ticketDate).toLocaleDateString('ru')
+    : '14.03.2019';
+  const photo = profile?.photo;
 
   return (
     <section id="cabinet" className="relative border-t border-border bg-hero-bg py-20 md:py-28">
@@ -29,10 +34,14 @@ const Cabinet = ({ profile, onStart }: { profile: HunterProfile | null; onStart:
         <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:items-stretch">
           <div className="animate-fade-in overflow-hidden rounded-lg border border-border bg-gradient-to-br from-hero-surface to-hero-bg p-8 md:p-10">
             <div className="flex items-center gap-5">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary/15 ring-1 ring-primary/40">
-                <span className="font-head text-3xl font-bold text-primary">
-                  {name.charAt(0)}
-                </span>
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary/15 ring-1 ring-primary/40">
+                {photo ? (
+                  <img src={photo} alt={name} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="font-head text-3xl font-bold text-primary">
+                    {name.charAt(0)}
+                  </span>
+                )}
               </div>
               <div>
                 <span className="text-xs uppercase tracking-[0.2em] text-hero-accent">
@@ -44,6 +53,17 @@ const Cabinet = ({ profile, onStart }: { profile: HunterProfile | null; onStart:
                 <p className="text-hero-muted">
                   {city} · охота по «{game}»
                 </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2 rounded-sm border border-border bg-hero-bg/50 px-4 py-3">
+              <div>
+                <div className="text-xs uppercase tracking-wide text-hero-muted">Охотбилет</div>
+                <div className="font-medium text-hero-text">{ticket}</div>
+              </div>
+              <div>
+                <div className="text-xs uppercase tracking-wide text-hero-muted">Дата выдачи</div>
+                <div className="font-medium text-hero-text">{ticketDate}</div>
               </div>
             </div>
 
