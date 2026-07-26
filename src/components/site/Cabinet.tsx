@@ -1,4 +1,5 @@
 import type { HunterProfile } from './HunterOnboarding';
+import type { HuntEventDto } from '@/lib/api';
 import Icon from '@/components/ui/icon';
 
 const routes = [
@@ -8,14 +9,14 @@ const routes = [
   { icon: 'Map', label: 'Карта охот', href: '#map', desc: 'точки выездов на карте' },
 ];
 
-const stats = [
-  { value: '12', label: 'выездов' },
-  { value: '34', label: 'трофея' },
-  { value: '7', label: 'лет стажа' },
-  { value: '3', label: 'ствола' },
-];
+interface Props {
+  profile: HunterProfile | null;
+  events?: HuntEventDto[];
+  weaponsCount?: number;
+  onStart: () => void;
+}
 
-const Cabinet = ({ profile, onStart }: { profile: HunterProfile | null; onStart: () => void }) => {
+const Cabinet = ({ profile, events = [], weaponsCount = 0, onStart }: Props) => {
   const name = profile?.name || 'Иван Малышев';
   const city = profile?.city || 'Тюмень';
   const ticket = profile?.ticket || '№ 72 004518';
@@ -23,6 +24,20 @@ const Cabinet = ({ profile, onStart }: { profile: HunterProfile | null; onStart:
     ? new Date(profile.ticketDate).toLocaleDateString('ru')
     : '14.03.2019';
   const photo = profile?.photo;
+
+  const huntsCount = events.length;
+  const trophiesCount = events.reduce(
+    (sum, ev) => sum + ev.trophies.reduce((s, t) => s + (parseInt(t.count, 10) || 1), 0),
+    0,
+  );
+  const experience = profile?.experience || '0';
+
+  const stats = [
+    { value: String(huntsCount), label: 'выездов' },
+    { value: String(trophiesCount), label: 'трофея' },
+    { value: experience, label: 'лет стажа' },
+    { value: String(weaponsCount), label: 'ствола' },
+  ];
 
   return (
     <section id="cabinet" className="relative border-t border-border bg-hero-bg py-20 md:py-28">

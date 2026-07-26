@@ -16,6 +16,7 @@ const HUNTER_ID_KEY = 'hunter_diary_hunter_id';
 const Index = () => {
   const [authOpen, setAuthOpen] = useState(false);
   const [profile, setProfile] = useState<HunterProfile | null>(null);
+  const [weaponsCount, setWeaponsCount] = useState(0);
   const { events, loading: eventsLoading, removeEvent, upsertEvent } = useHuntEvents(profile?.id);
 
   useEffect(() => {
@@ -48,7 +49,7 @@ const Index = () => {
     <div className="min-h-screen bg-hero-bg font-body text-hero-text">
       <Header onStart={() => setAuthOpen(true)} />
       <Hero onStart={() => setAuthOpen(true)} />
-      <Cabinet profile={profile} onStart={() => setAuthOpen(true)} />
+      <Cabinet profile={profile} events={events} weaponsCount={weaponsCount} onStart={() => setAuthOpen(true)} />
       <MyCalendar
         hunterId={profile?.id}
         events={events}
@@ -63,7 +64,7 @@ const Index = () => {
         onUpsert={upsertEvent}
         onRemove={removeEvent}
       />
-      <Gear hunterId={profile?.id} />
+      <Gear hunterId={profile?.id} onCountChange={setWeaponsCount} />
       <HuntMap hunterId={profile?.id} events={events} loading={eventsLoading} />
       <Footer onStart={() => setAuthOpen(true)} />
 

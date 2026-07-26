@@ -51,7 +51,7 @@ const AccessoryRow = ({ icon, label, acc }: { icon: string; label: string; acc: 
   </div>
 );
 
-const Gear = ({ hunterId }: { hunterId?: string }) => {
+const Gear = ({ hunterId, onCountChange }: { hunterId?: string; onCountChange?: (n: number) => void }) => {
   const [weapons, setWeapons] = useState<WeaponDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -72,6 +72,10 @@ const Gear = ({ hunterId }: { hunterId?: string }) => {
       .catch(() => toast({ title: 'Не удалось загрузить оружейный сейф' }))
       .finally(() => setLoading(false));
   }, [hunterId]);
+
+  useEffect(() => {
+    onCountChange?.(weapons.length);
+  }, [weapons, onCountChange]);
 
   const openAdd = () => {
     if (!hunterId) {
