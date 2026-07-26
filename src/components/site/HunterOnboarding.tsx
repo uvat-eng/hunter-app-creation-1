@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,7 @@ const HunterOnboarding = ({
   onOpenChange: (v: boolean) => void;
   onComplete: (p: HunterProfile) => void;
 }) => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<HunterProfile>({
@@ -86,13 +88,11 @@ const HunterOnboarding = ({
         ticketDate: created.ticket_date || form.ticketDate,
         photo: created.photo || form.photo,
       };
-      toast({ title: 'Анкета сохранена', description: 'Личный кабинет открыт ниже.' });
+      toast({ title: 'Анкета сохранена', description: 'Личный кабинет открыт.' });
       onComplete(saved);
       onOpenChange(false);
       setStep(0);
-      setTimeout(() => {
-        document.getElementById('cabinet')?.scrollIntoView({ behavior: 'smooth' });
-      }, 150);
+      navigate('/');
     } catch {
       toast({ title: 'Не удалось сохранить анкету', description: 'Попробуйте ещё раз.' });
     } finally {

@@ -1,12 +1,13 @@
+import { Link } from 'react-router-dom';
 import type { HunterProfile } from './HunterOnboarding';
 import type { HuntEventDto } from '@/lib/api';
 import Icon from '@/components/ui/icon';
 
 const routes = [
-  { icon: 'CalendarDays', label: 'Календарь охот', href: '#calendar', desc: 'планы и завершённые охоты' },
-  { icon: 'BookOpen', label: 'Дневник охот', href: '#hunts', desc: 'история выездов и трофеи' },
-  { icon: 'Target', label: 'Моё оружие', href: '#gear', desc: 'учёт стволов и разрешений' },
-  { icon: 'Map', label: 'Карта охот', href: '#map', desc: 'точки выездов на карте' },
+  { icon: 'CalendarDays', label: 'Календарь охот', href: '/calendar', desc: 'планы и завершённые охоты' },
+  { icon: 'BookOpen', label: 'Дневник охот', href: '/hunts', desc: 'история выездов и трофеи' },
+  { icon: 'Target', label: 'Моё оружие', href: '/gear', desc: 'учёт стволов и разрешений' },
+  { icon: 'Map', label: 'Карта охот', href: '/map', desc: 'точки выездов на карте' },
 ];
 
 interface Props {
@@ -101,9 +102,9 @@ const Cabinet = ({ profile, events = [], weaponsCount = 0, onStart }: Props) => 
           {/* маршруты кабинета */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-2">
             {routes.map((r) => (
-              <a
+              <Link
                 key={r.label}
-                href={r.href}
+                to={r.href}
                 className="group flex flex-col justify-between rounded-lg border border-border bg-hero-surface p-5 transition-all hover:-translate-y-1 hover:border-primary/50"
               >
                 <span className="flex h-11 w-11 items-center justify-center rounded-sm bg-primary/12 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
@@ -115,7 +116,7 @@ const Cabinet = ({ profile, events = [], weaponsCount = 0, onStart }: Props) => 
                   </div>
                   <div className="mt-1 text-xs text-hero-muted">{r.desc}</div>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         </div>

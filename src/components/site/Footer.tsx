@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
 
 const Footer = ({ onStart }: { onStart: () => void }) => (
@@ -29,11 +30,11 @@ const Footer = ({ onStart }: { onStart: () => void }) => (
           <div>
             <div className="mb-3 text-xs uppercase tracking-wide text-hero-muted">Личный кабинет</div>
             <ul className="space-y-2 text-sm">
-              <li><a href="#cabinet" className="text-hero-text transition-colors hover:text-primary">Кабинет</a></li>
-              <li><a href="#calendar" className="text-hero-text transition-colors hover:text-primary">Календарь охот</a></li>
-              <li><a href="#hunts" className="text-hero-text transition-colors hover:text-primary">Дневник</a></li>
-              <li><a href="#gear" className="text-hero-text transition-colors hover:text-primary">Оружие</a></li>
-              <li><a href="#map" className="text-hero-text transition-colors hover:text-primary">Карта охот</a></li>
+              <li><Link to="/" className="text-hero-text transition-colors hover:text-primary">Кабинет</Link></li>
+              <li><Link to="/calendar" className="text-hero-text transition-colors hover:text-primary">Календарь охот</Link></li>
+              <li><Link to="/hunts" className="text-hero-text transition-colors hover:text-primary">Дневник</Link></li>
+              <li><Link to="/gear" className="text-hero-text transition-colors hover:text-primary">Оружие</Link></li>
+              <li><Link to="/map" className="text-hero-text transition-colors hover:text-primary">Карта охот</Link></li>
             </ul>
           </div>
           <div>
@@ -56,8 +57,8 @@ const Footer = ({ onStart }: { onStart: () => void }) => (
           области. {new Date().getFullYear()} год.
         </p>
         <div className="flex shrink-0 gap-4">
-          <a href="/privacy" className="text-hero-text transition-colors hover:text-primary">Конфиденциальность</a>
-          <a href="/terms" className="text-hero-text transition-colors hover:text-primary">Условия</a>
+          <Link to="/privacy" className="text-hero-text transition-colors hover:text-primary">Конфиденциальность</Link>
+          <Link to="/terms" className="text-hero-text transition-colors hover:text-primary">Условия</Link>
         </div>
       </div>
     </div>
