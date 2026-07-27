@@ -215,3 +215,12 @@ export function findDistrictForPoint(lat: number, lng: number): RegionMap | null
   }
   return null;
 }
+
+// обратное преобразование: проценты x/y (0-100) внутри вьюпорта карты → географические координаты
+// (используется, когда пользователь ставит точку кликом по карте)
+export function viewportPercentToGeo(x: number, y: number, bounds: MapBounds): { lat: number; lng: number } {
+  let lng = bounds.west + (x / 100) * (bounds.east - bounds.west);
+  if (lng > 180) lng -= 360;
+  const lat = bounds.north - (y / 100) * (bounds.north - bounds.south);
+  return { lat, lng };
+}

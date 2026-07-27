@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import YandexPlacePicker from './YandexPlacePicker';
+import HuntPlacePicker from './HuntPlacePicker';
 import Icon from '@/components/ui/icon';
 import {
   Dialog,
@@ -324,7 +324,7 @@ const HuntEventEditor = ({ open, onOpenChange, hunterId, editEvent, initialDate,
             <div>
               <Label htmlFor="ev-loc" className="text-hero-muted">Место охоты</Label>
               <div className="mt-1.5">
-                <YandexPlacePicker
+                <HuntPlacePicker
                   address={draft.locationName}
                   lat={draft.lat}
                   lng={draft.lng}
