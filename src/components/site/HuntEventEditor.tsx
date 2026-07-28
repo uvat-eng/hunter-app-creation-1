@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { huntEventsApi, type HuntEventDto, type TrophyDto } from '@/lib/api';
-import { downloadIcs } from '@/lib/ics';
+import { addToDeviceCalendar } from '@/lib/device-calendar';
 import { huntTypes } from '@/lib/hunt-species';
 
 export type Draft = Omit<HuntEventDto, 'id' | 'hunterId'>;
@@ -185,14 +185,18 @@ const HuntEventEditor = ({ open, onOpenChange, hunterId, editEvent, initialDate,
       onSaved(saved);
       toast({ title: editEvent ? 'Событие обновлено' : 'Событие добавлено в дневник', description: saved.title });
       if (draft.reminder) {
-        downloadIcs({
+        const added = await addToDeviceCalendar({
           title: saved.title,
           date: saved.date,
           description: [saved.huntType, saved.notes].filter(Boolean).join(' · '),
           location: saved.locationName,
           reminderMinutesBefore: 12 * 60,
         });
-        toast({ title: 'Файл события скачан', description: 'Откройте его, чтобы добавить в календарь телефона.' });
+        toast(
+          added
+            ? { title: 'Событие добавлено в календарь телефона' }
+            : { title: 'Файл события скачан', description: 'Откройте его, чтобы добавить в календарь телефона.' },
+        );
       }
       onOpenChange(false);
     } catch (err) {
@@ -455,8 +459,8 @@ const HuntEventEditor = ({ open, onOpenChange, hunterId, editEvent, initialDate,
               <span>
                 <span className="block text-sm font-medium text-hero-text">Добавить в календарь телефона</span>
                 <span className="mt-0.5 block text-xs text-hero-muted">
-                  После сохранения скачается файл события — откройте его на телефоне, чтобы добавить в календарь с
-                  напоминанием за 12 часов.
+                  После сохранения событие автоматически появится в календаре телефона с напоминанием за 12 часов
+                  (может понадобиться разрешение на доступ к календарю).
                 </span>
               </span>
             </button>

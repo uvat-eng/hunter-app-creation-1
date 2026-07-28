@@ -3,7 +3,7 @@ import SectionHeading from './SectionHeading';
 import Icon from '@/components/ui/icon';
 import { toast } from '@/hooks/use-toast';
 import type { HuntEventDto } from '@/lib/api';
-import { downloadIcs } from '@/lib/ics';
+import { addToDeviceCalendar } from '@/lib/device-calendar';
 import { SPECIES, matchSpecies } from '@/lib/hunt-species';
 import HuntEventEditor from './HuntEventEditor';
 import HuntEventViewer from './HuntEventViewer';
@@ -262,15 +262,20 @@ const MyCalendar = ({ hunterId, events = [], loading, onUpsert, onRemove }: Prop
                     </div>
                     <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          downloadIcs({
+                          const added = await addToDeviceCalendar({
                             title: ev.title,
                             date: ev.date,
                             description: [ev.huntType, ev.notes].filter(Boolean).join(' · '),
                             location: ev.locationName,
                             reminderMinutesBefore: 12 * 60,
                           });
+                          toast(
+                            added
+                              ? { title: 'Событие добавлено в календарь телефона' }
+                              : { title: 'Файл события скачан', description: 'Откройте его, чтобы добавить в календарь телефона.' },
+                          );
                         }}
                         className="flex h-7 w-7 items-center justify-center rounded-sm border border-border text-hero-muted transition-colors hover:border-primary hover:text-primary"
                         aria-label="В календарь телефона"

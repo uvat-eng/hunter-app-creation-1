@@ -30,6 +30,29 @@ npx cap add ios      # только на Mac
 npx cap sync
 ```
 
+## Шаг 4. Разрешения для добавления событий в календарь телефона
+Приложение умеет само добавлять события охоты в системный календарь устройства
+(плагин `@ebarooni/capacitor-calendar`). Чтобы это заработало, нужно один раз
+прописать разрешения в нативных проектах — они не генерируются автоматически.
+
+**Android** — добавьте в `android/app/src/main/AndroidManifest.xml` (внутри тега `<manifest>`, рядом с другими `<uses-permission>`):
+```xml
+<uses-permission android:name="android.permission.READ_CALENDAR" />
+<uses-permission android:name="android.permission.WRITE_CALENDAR" />
+```
+
+**iOS** — добавьте в `ios/App/App/Info.plist` (внутри `<dict>`):
+```xml
+<key>NSCalendarsUsageDescription</key>
+<string>Приложению нужен доступ к календарю, чтобы добавлять туда даты охот.</string>
+<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+<string>Приложению нужно разрешение, чтобы добавлять события охоты в ваш календарь.</string>
+```
+
+После добавления разрешений выполните `npx cap sync` ещё раз и пересоберите приложение.
+Если пользователь не даст разрешение (или на вебе), приложение вернётся к старому
+способу — скачает файл события (.ics) для ручного добавления.
+
 ---
 
 ## Android (Google Play)

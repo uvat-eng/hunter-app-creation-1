@@ -8,7 +8,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import type { HuntEventDto } from '@/lib/api';
-import { downloadIcs } from '@/lib/ics';
+import { addToDeviceCalendar } from '@/lib/device-calendar';
+import { toast } from '@/hooks/use-toast';
 
 interface Props {
   open: boolean;
@@ -182,15 +183,20 @@ const HuntEventViewer = ({ open, onOpenChange, event, onEdit, onDelete }: Props)
 
         <div className="flex gap-2 pt-1">
           <button
-            onClick={() =>
-              downloadIcs({
+            onClick={async () => {
+              const added = await addToDeviceCalendar({
                 title: event.title,
                 date: event.date,
                 description: [event.huntType, event.notes].filter(Boolean).join(' · '),
                 location: event.locationName,
                 reminderMinutesBefore: 12 * 60,
-              })
-            }
+              });
+              toast(
+                added
+                  ? { title: 'Событие добавлено в календарь телефона' }
+                  : { title: 'Файл события скачан', description: 'Откройте его, чтобы добавить в календарь телефона.' },
+              );
+            }}
             className="flex h-10 w-10 items-center justify-center rounded-sm border border-border text-hero-muted transition-colors hover:border-primary hover:text-primary"
             aria-label="В календарь телефона"
           >
