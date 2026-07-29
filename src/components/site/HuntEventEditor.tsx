@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import HuntPlacePicker from './HuntPlacePicker';
 import Icon from '@/components/ui/icon';
 import {
   Dialog,
@@ -8,13 +7,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { huntEventsApi, type HuntEventDto, type TrophyDto } from '@/lib/api';
 import { addToDeviceCalendar } from '@/lib/device-calendar';
-import { huntTypes } from '@/lib/hunt-species';
+import HuntEventDetailsStep from './HuntEventDetailsStep';
+import HuntEventTrophiesStep from './HuntEventTrophiesStep';
+import { HuntEventPhotosStep, HuntEventVideosStep } from './HuntEventMediaStep';
+import { HuntEventLocationStep, HuntEventReminderStep } from './HuntEventLocationStep';
 
 export type Draft = Omit<HuntEventDto, 'id' | 'hunterId'>;
 
@@ -228,244 +227,32 @@ const HuntEventEditor = ({ open, onOpenChange, hunterId, editEvent, initialDate,
           ))}
         </div>
 
-        {step === 0 && (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="ev-title" className="text-hero-muted">Название события</Label>
-              <Input
-                id="ev-title"
-                value={draft.title}
-                onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-                placeholder="Утиная охота на озере"
-                className="mt-1.5 border-border bg-hero-bg"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="ev-date" className="text-hero-muted">Дата</Label>
-                <Input
-                  id="ev-date"
-                  type="date"
-                  value={draft.date}
-                  onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))}
-                  className="mt-1.5 border-border bg-hero-bg"
-                />
-              </div>
-              <div>
-                <Label htmlFor="ev-type" className="text-hero-muted">Вид охоты</Label>
-                <select
-                  id="ev-type"
-                  value={draft.huntType}
-                  onChange={(e) => setDraft((d) => ({ ...d, huntType: e.target.value }))}
-                  className="mt-1.5 flex h-10 w-full rounded-sm border border-border bg-hero-bg px-3 text-sm text-hero-text"
-                >
-                  {huntTypes.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <Label className="text-hero-muted">Статус</Label>
-              <div className="mt-2 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setDraft((d) => ({ ...d, status: 'planned' }))}
-                  className={`flex-1 rounded-sm border px-4 py-2.5 text-sm transition-colors ${
-                    draft.status === 'planned'
-                      ? 'border-primary bg-primary/10 text-hero-text'
-                      : 'border-border text-hero-muted hover:border-primary/50'
-                  }`}
-                >
-                  <Icon name="CalendarClock" size={14} className="mr-1.5 inline" /> Запланирована
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDraft((d) => ({ ...d, status: 'done' }))}
-                  className={`flex-1 rounded-sm border px-4 py-2.5 text-sm transition-colors ${
-                    draft.status === 'done'
-                      ? 'border-primary bg-primary/10 text-hero-text'
-                      : 'border-border text-hero-muted hover:border-primary/50'
-                  }`}
-                >
-                  <Icon name="CheckCircle2" size={14} className="mr-1.5 inline" /> Состоялась
-                </button>
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="ev-budget" className="text-hero-muted">
-                {draft.status === 'done' ? 'Фактические затраты, ₽' : 'Плановый бюджет, ₽'}
-              </Label>
-              <Input
-                id="ev-budget"
-                type="number"
-                min="0"
-                step="1"
-                inputMode="numeric"
-                value={draft.budget ?? ''}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, budget: e.target.value === '' ? null : Number(e.target.value) }))
-                }
-                placeholder="0"
-                className="mt-1.5 border-border bg-hero-bg"
-              />
-            </div>
-            <div>
-              <Label htmlFor="ev-notes" className="text-hero-muted">Заметка</Label>
-              <Textarea
-                id="ev-notes"
-                value={draft.notes}
-                onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))}
-                placeholder="Погода, состав группы, впечатления…"
-                className="mt-1.5 border-border bg-hero-bg"
-              />
-            </div>
-          </div>
-        )}
+        {step === 0 && <HuntEventDetailsStep draft={draft} setDraft={setDraft} />}
 
-        {step === 1 && (
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="ev-loc" className="text-hero-muted">Место охоты</Label>
-              <div className="mt-1.5">
-                <HuntPlacePicker
-                  address={draft.locationName}
-                  lat={draft.lat}
-                  lng={draft.lng}
-                  onChange={(patch) =>
-                    setDraft((d) => ({
-                      ...d,
-                      ...(patch.address !== undefined ? { locationName: patch.address } : {}),
-                      ...(patch.lat !== undefined ? { lat: patch.lat } : {}),
-                      ...(patch.lng !== undefined ? { lng: patch.lng } : {}),
-                      ...(patch.region !== undefined ? { region: patch.region } : {}),
-                    }))
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        )}
+        {step === 1 && <HuntEventLocationStep draft={draft} setDraft={setDraft} />}
 
         {step === 2 && (
-          <div className="space-y-3">
-            {draft.status !== 'done' && (
-              <p className="rounded-sm border border-dashed border-border bg-hero-bg px-4 py-3 text-sm text-hero-muted">
-                Трофеи можно указать, когда охота уже состоялась. Пропустите этот шаг для запланированной охоты.
-              </p>
-            )}
-            {draft.trophies.map((t, i) => (
-              <div key={i} className="flex gap-2">
-                <Input
-                  value={t.game}
-                  onChange={(e) => setTrophy(i, { game: e.target.value })}
-                  placeholder="Кряква"
-                  className="border-border bg-hero-bg"
-                />
-                <Input
-                  value={t.count}
-                  onChange={(e) => setTrophy(i, { count: e.target.value })}
-                  placeholder="1"
-                  className="w-20 border-border bg-hero-bg"
-                />
-                <button
-                  onClick={() => removeTrophy(i)}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-sm border border-border text-hero-muted hover:border-destructive hover:text-destructive"
-                >
-                  <Icon name="X" size={16} />
-                </button>
-              </div>
-            ))}
-            <button
-              onClick={addTrophy}
-              className="flex w-full items-center justify-center gap-2 rounded-sm border border-dashed border-border py-2.5 text-sm text-hero-muted transition-colors hover:border-primary hover:text-hero-text"
-            >
-              <Icon name="Plus" size={15} /> Добавить трофей
-            </button>
-          </div>
+          <HuntEventTrophiesStep
+            draft={draft}
+            addTrophy={addTrophy}
+            setTrophy={setTrophy}
+            removeTrophy={removeTrophy}
+          />
         )}
 
-        {step === 3 && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-5 gap-2">
-              {draft.photos.map((p, i) => (
-                <div key={i} className="group relative aspect-square overflow-hidden rounded-sm border border-border">
-                  <img src={p} alt="" className="h-full w-full object-cover" />
-                  <button
-                    onClick={() => removePhoto(i)}
-                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                  >
-                    <Icon name="X" size={12} />
-                  </button>
-                </div>
-              ))}
-              {draft.photos.length < 5 && (
-                <label className="flex aspect-square cursor-pointer items-center justify-center rounded-sm border border-dashed border-border text-hero-muted transition-colors hover:border-primary hover:text-primary">
-                  <Icon name="Camera" size={20} />
-                  <input type="file" accept="image/*" multiple onChange={onPhotos} className="hidden" />
-                </label>
-              )}
-            </div>
-            <p className="text-xs text-hero-muted">До 5 фотографий, {5 - draft.photos.length} осталось.</p>
-          </div>
-        )}
+        {step === 3 && <HuntEventPhotosStep draft={draft} onPhotos={onPhotos} removePhoto={removePhoto} />}
 
         {step === 4 && (
-          <div className="space-y-3">
-            <div className="grid grid-cols-3 gap-2">
-              {draft.videos.map((v, i) => (
-                <div key={i} className="group relative aspect-square overflow-hidden rounded-sm border border-border">
-                  <video src={v} className="h-full w-full object-cover" />
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                    <Icon name="Play" size={20} className="text-white" />
-                  </div>
-                  <button
-                    onClick={() => removeVideo(i)}
-                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                  >
-                    <Icon name="X" size={12} />
-                  </button>
-                </div>
-              ))}
-              {draft.videos.length < MAX_VIDEOS && (
-                <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-sm border border-dashed border-border text-hero-muted transition-colors hover:border-primary hover:text-primary">
-                  <Icon name="Video" size={20} />
-                  <input type="file" accept="video/*" multiple onChange={onVideos} className="hidden" />
-                </label>
-              )}
-            </div>
-            <p className="text-xs text-hero-muted">
-              До {MAX_VIDEOS} видео, {MAX_VIDEOS - draft.videos.length} осталось. Максимум {MAX_VIDEO_MB} МБ на файл.
-            </p>
-          </div>
+          <HuntEventVideosStep
+            draft={draft}
+            maxVideos={MAX_VIDEOS}
+            maxVideoMb={MAX_VIDEO_MB}
+            onVideos={onVideos}
+            removeVideo={removeVideo}
+          />
         )}
 
-        {step === 5 && (
-          <div className="space-y-4">
-            <button
-              type="button"
-              onClick={() => setDraft((d) => ({ ...d, reminder: !d.reminder }))}
-              className={`flex w-full items-center gap-3 rounded-sm border px-4 py-4 text-left transition-colors ${
-                draft.reminder ? 'border-primary bg-primary/10' : 'border-border hover:border-primary/40'
-              }`}
-            >
-              <span
-                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border ${
-                  draft.reminder ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
-                }`}
-              >
-                {draft.reminder && <Icon name="Check" size={13} />}
-              </span>
-              <span>
-                <span className="block text-sm font-medium text-hero-text">Добавить в календарь телефона</span>
-                <span className="mt-0.5 block text-xs text-hero-muted">
-                  После сохранения событие автоматически появится в календаре телефона с напоминанием за 12 часов
-                  (может понадобиться разрешение на доступ к календарю).
-                </span>
-              </span>
-            </button>
-          </div>
-        )}
+        {step === 5 && <HuntEventReminderStep draft={draft} setDraft={setDraft} />}
 
         <div className="flex gap-3 pt-1">
           {step > 0 && (
