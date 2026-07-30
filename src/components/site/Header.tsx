@@ -14,7 +14,10 @@ const Header = ({ onStart }: { onStart: () => void }) => {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 inset-x-0 z-40 border-b border-border/60 bg-hero-bg/80 backdrop-blur-md">
+    <header
+      className="fixed top-0 inset-x-0 z-40 border-b border-border/60 bg-hero-bg/80 backdrop-blur-md"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 md:px-10">
         <Link to="/" className="flex items-baseline gap-3">
           <span className="font-head text-xl font-bold uppercase tracking-tight text-hero-text md:text-2xl">

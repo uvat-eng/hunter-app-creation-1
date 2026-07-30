@@ -71,6 +71,7 @@
     @apply bg-background text-foreground;
     font-family: "Golos Text", sans-serif;
     -webkit-font-smoothing: antialiased;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   h1,
