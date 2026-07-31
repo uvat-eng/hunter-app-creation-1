@@ -1,18 +1,5 @@
-import func2url from '../../backend/func2url.json';
-
-const urls = func2url as Record<string, string>;
-
-async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    ...options,
-    headers: { 'Content-Type': 'application/json', ...(options?.headers || {}) },
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`HTTP ${res.status}: ${text || 'Ошибка запроса'}`);
-  }
-  return res.json();
-}
+// Все данные приложения хранятся локально на устройстве (IndexedDB) — не передаются на сервер.
+import { dbGet, dbGetAll, dbPut, dbDelete, genId } from '@/lib/local-db';
 
 export interface HunterDto {
   id: string;
@@ -27,11 +14,40 @@ export interface HunterDto {
 }
 
 export const huntersApi = {
-  get: (id: string) => request<HunterDto>(`${urls.hunters}?id=${id}`),
-  create: (data: Record<string, unknown>) =>
-    request<HunterDto>(urls.hunters, { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: Record<string, unknown>) =>
-    request<HunterDto>(urls.hunters, { method: 'PUT', body: JSON.stringify({ ...data, id }) }),
+  get: async (id: string) => {
+    const h = await dbGet<HunterDto>('hunters', id);
+    if (!h) throw new Error('not found');
+    return h;
+  },
+  create: async (data: Record<string, unknown>) => {
+    const hunter: HunterDto = {
+      id: genId(),
+      name: String(data.name || ''),
+      city: String(data.city || ''),
+      ticket: String(data.ticket || ''),
+      ticket_date: (data.ticketDate as string) || null,
+      photo: String(data.photo || ''),
+      experience: String(data.experience || ''),
+      weapon: String(data.weapon || ''),
+      game: String(data.game || ''),
+    };
+    return dbPut('hunters', hunter);
+  },
+  update: async (id: string, data: Record<string, unknown>) => {
+    const existing = await dbGet<HunterDto>('hunters', id);
+    const hunter: HunterDto = {
+      id,
+      name: String(data.name ?? existing?.name ?? ''),
+      city: String(data.city ?? existing?.city ?? ''),
+      ticket: String(data.ticket ?? existing?.ticket ?? ''),
+      ticket_date: (data.ticketDate as string) ?? existing?.ticket_date ?? null,
+      photo: String(data.photo ?? existing?.photo ?? ''),
+      experience: String(data.experience ?? existing?.experience ?? ''),
+      weapon: String(data.weapon ?? existing?.weapon ?? ''),
+      game: String(data.game ?? existing?.game ?? ''),
+    };
+    return dbPut('hunters', hunter);
+  },
 };
 
 export interface AccessoryDto {
@@ -54,12 +70,23 @@ export interface WeaponDto {
 }
 
 export const weaponsApi = {
-  list: (hunterId: string) => request<WeaponDto[]>(`${urls.weapons}?hunterId=${hunterId}`),
-  create: (data: Record<string, unknown>) =>
-    request<WeaponDto>(urls.weapons, { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: Record<string, unknown>) =>
-    request<WeaponDto>(urls.weapons, { method: 'PUT', body: JSON.stringify({ ...data, id }) }),
-  remove: (id: string) => request<{ ok: boolean }>(`${urls.weapons}?id=${id}`, { method: 'DELETE' }),
+  list: async (hunterId: string) => {
+    const all = await dbGetAll<WeaponDto>('weapons');
+    return all.filter((w) => w.hunterId === hunterId);
+  },
+  create: async (data: Record<string, unknown>) => {
+    const weapon = { ...data, id: genId() } as WeaponDto;
+    return dbPut('weapons', weapon);
+  },
+  update: async (id: string, data: Record<string, unknown>) => {
+    const existing = await dbGet<WeaponDto>('weapons', id);
+    const weapon = { ...existing, ...data, id } as WeaponDto;
+    return dbPut('weapons', weapon);
+  },
+  remove: async (id: string) => {
+    await dbDelete('weapons', id);
+    return { ok: true };
+  },
 };
 
 export interface MedicalCertificateDto {
@@ -71,31 +98,46 @@ export interface MedicalCertificateDto {
   photo: string;
 }
 
-export const medicalCertificatesApi = {
-  get: (hunterId: string) =>
-    request<MedicalCertificateDto | null>(`${urls['medical-certificates']}?hunterId=${hunterId}`),
-  create: (data: Record<string, unknown>) =>
-    request<MedicalCertificateDto>(urls['medical-certificates'], { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: Record<string, unknown>) =>
-    request<MedicalCertificateDto>(urls['medical-certificates'], {
-      method: 'PUT',
-      body: JSON.stringify({ ...data, id }),
-    }),
+const CERT_VALID_YEARS = 5;
+
+const withExpiresDate = (issueDate: string): string => {
+  if (!issueDate) return '';
+  const d = new Date(issueDate);
+  d.setFullYear(d.getFullYear() + CERT_VALID_YEARS);
+  return d.toISOString().slice(0, 10);
 };
 
-export interface BookingDto {
-  id: string;
-  hunterId: string | null;
-  date: string;
-  services: string[];
-  total: number;
-}
-
-export const bookingsApi = {
-  list: (hunterId?: string) =>
-    request<BookingDto[]>(hunterId ? `${urls.bookings}?hunterId=${hunterId}` : urls.bookings),
-  create: (data: Record<string, unknown>) =>
-    request<BookingDto>(urls.bookings, { method: 'POST', body: JSON.stringify(data) }),
+export const medicalCertificatesApi = {
+  get: async (hunterId: string) => {
+    const all = await dbGetAll<MedicalCertificateDto>('medicalCertificates');
+    const found = all.find((c) => c.hunterId === hunterId);
+    return found || null;
+  },
+  create: async (data: Record<string, unknown>) => {
+    const issueDate = String(data.issueDate || '');
+    const cert: MedicalCertificateDto = {
+      id: genId(),
+      hunterId: String(data.hunterId || ''),
+      number: String(data.number || ''),
+      issueDate,
+      expiresDate: withExpiresDate(issueDate),
+      photo: String(data.photo || ''),
+    };
+    return dbPut('medicalCertificates', cert);
+  },
+  update: async (id: string, data: Record<string, unknown>) => {
+    const existing = await dbGet<MedicalCertificateDto>('medicalCertificates', id);
+    const issueDate = String(data.issueDate ?? existing?.issueDate ?? '');
+    const cert: MedicalCertificateDto = {
+      id,
+      hunterId: existing?.hunterId || String(data.hunterId || ''),
+      number: String(data.number ?? existing?.number ?? ''),
+      issueDate,
+      expiresDate: withExpiresDate(issueDate),
+      photo: String(data.photo ?? existing?.photo ?? ''),
+    };
+    return dbPut('medicalCertificates', cert);
+  },
 };
 
 export interface TrophyDto {
@@ -123,10 +165,23 @@ export interface HuntEventDto {
 }
 
 export const huntEventsApi = {
-  list: (hunterId: string) => request<HuntEventDto[]>(`${urls['hunt-events']}?hunterId=${hunterId}`),
-  create: (data: Record<string, unknown>) =>
-    request<HuntEventDto>(urls['hunt-events'], { method: 'POST', body: JSON.stringify(data) }),
-  update: (id: string, data: Record<string, unknown>) =>
-    request<HuntEventDto>(urls['hunt-events'], { method: 'PUT', body: JSON.stringify({ ...data, id }) }),
-  remove: (id: string) => request<{ ok: boolean }>(`${urls['hunt-events']}?id=${id}`, { method: 'DELETE' }),
+  list: async (hunterId: string) => {
+    const all = await dbGetAll<HuntEventDto>('huntEvents');
+    return all
+      .filter((e) => e.hunterId === hunterId)
+      .sort((a, b) => (a.date < b.date ? 1 : -1));
+  },
+  create: async (data: Record<string, unknown>) => {
+    const event = { ...data, id: genId() } as HuntEventDto;
+    return dbPut('huntEvents', event);
+  },
+  update: async (id: string, data: Record<string, unknown>) => {
+    const existing = await dbGet<HuntEventDto>('huntEvents', id);
+    const event = { ...existing, ...data, id } as HuntEventDto;
+    return dbPut('huntEvents', event);
+  },
+  remove: async (id: string) => {
+    await dbDelete('huntEvents', id);
+    return { ok: true };
+  },
 };

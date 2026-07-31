@@ -81,7 +81,7 @@ const HunterOnboarding = ({
     }
     setSaving(true);
     try {
-      const created = await huntersApi.create(form);
+      const created = await huntersApi.create({ ...form });
       const saved: HunterProfile = {
         ...form,
         id: created.id,
