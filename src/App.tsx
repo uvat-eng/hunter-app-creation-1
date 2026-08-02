@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import CalendarPage from "./pages/CalendarPage";
 import HuntsPage from "./pages/HuntsPage";
 import GearPage from "./pages/GearPage";
+import CarPage from "./pages/CarPage";
 import MapPage from "./pages/MapPage";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/calendar" element={<CalendarPage />} />
               <Route path="/hunts" element={<HuntsPage />} />
               <Route path="/gear" element={<GearPage />} />
+              <Route path="/car" element={<CarPage />} />
               <Route path="/map" element={<MapPage />} />
             </Route>
             <Route path="/privacy" element={<PrivacyPolicy />} />

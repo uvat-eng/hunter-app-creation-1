@@ -8,6 +8,7 @@ const links = [
   { href: '/calendar', label: 'Календарь' },
   { href: '/hunts', label: 'Дневник' },
   { href: '/gear', label: 'Оружие' },
+  { href: '/car', label: 'Автомобиль' },
   { href: '/map', label: 'Карта охот' },
 ];
 

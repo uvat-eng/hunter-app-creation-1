@@ -140,6 +140,102 @@ export const medicalCertificatesApi = {
   },
 };
 
+export type DocumentType = 'ticket' | 'inspector';
+
+export interface DocumentDto {
+  id: string;
+  hunterId: string;
+  type: DocumentType;
+  number: string;
+  issueDate: string;
+  photo: string;
+}
+
+export const documentsApi = {
+  get: async (hunterId: string, type: DocumentType) => {
+    const all = await dbGetAll<DocumentDto>('documents');
+    return all.find((d) => d.hunterId === hunterId && d.type === type) || null;
+  },
+  create: async (data: Record<string, unknown>) => {
+    const doc: DocumentDto = {
+      id: genId(),
+      hunterId: String(data.hunterId || ''),
+      type: (data.type as DocumentType) || 'ticket',
+      number: String(data.number || ''),
+      issueDate: String(data.issueDate || ''),
+      photo: String(data.photo || ''),
+    };
+    return dbPut('documents', doc);
+  },
+  update: async (id: string, data: Record<string, unknown>) => {
+    const existing = await dbGet<DocumentDto>('documents', id);
+    const doc: DocumentDto = {
+      id,
+      hunterId: existing?.hunterId || String(data.hunterId || ''),
+      type: (data.type as DocumentType) ?? existing?.type ?? 'ticket',
+      number: String(data.number ?? existing?.number ?? ''),
+      issueDate: String(data.issueDate ?? existing?.issueDate ?? ''),
+      photo: String(data.photo ?? existing?.photo ?? ''),
+    };
+    return dbPut('documents', doc);
+  },
+};
+
+export interface CarUpgradeDto {
+  id: string;
+  name: string;
+  note: string;
+}
+
+export interface MaintenanceDto {
+  id: string;
+  date: string;
+  description: string;
+  cost: number;
+}
+
+export interface CarDto {
+  id: string;
+  hunterId: string;
+  brand: string;
+  plate: string;
+  photo: string;
+  upgrades: CarUpgradeDto[];
+  maintenance: MaintenanceDto[];
+}
+
+export const carsApi = {
+  get: async (hunterId: string) => {
+    const all = await dbGetAll<CarDto>('cars');
+    return all.find((c) => c.hunterId === hunterId) || null;
+  },
+  create: async (data: Record<string, unknown>) => {
+    const car: CarDto = {
+      id: genId(),
+      hunterId: String(data.hunterId || ''),
+      brand: String(data.brand || ''),
+      plate: String(data.plate || ''),
+      photo: String(data.photo || ''),
+      upgrades: (data.upgrades as CarUpgradeDto[]) || [],
+      maintenance: (data.maintenance as MaintenanceDto[]) || [],
+    };
+    return dbPut('cars', car);
+  },
+  update: async (id: string, data: Record<string, unknown>) => {
+    const existing = await dbGet<CarDto>('cars', id);
+    const car: CarDto = {
+      id,
+      hunterId: existing?.hunterId || String(data.hunterId || ''),
+      brand: String(data.brand ?? existing?.brand ?? ''),
+      plate: String(data.plate ?? existing?.plate ?? ''),
+      photo: String(data.photo ?? existing?.photo ?? ''),
+      upgrades: (data.upgrades as CarUpgradeDto[]) ?? existing?.upgrades ?? [],
+      maintenance: (data.maintenance as MaintenanceDto[]) ?? existing?.maintenance ?? [],
+    };
+    return dbPut('cars', car);
+  },
+};
+
 export interface TrophyDto {
   game: string;
   count: string;

@@ -3,15 +3,15 @@
 // хранятся только на телефоне и никуда не передаются.
 
 const DB_NAME = 'hunter-diary-db';
-const DB_VERSION = 1;
-const STORES = ['hunters', 'weapons', 'huntEvents', 'medicalCertificates'] as const;
+const DB_VERSION = 2;
+const STORES = ['hunters', 'weapons', 'huntEvents', 'medicalCertificates', 'documents', 'cars'] as const;
 type StoreName = (typeof STORES)[number];
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
 const openDb = (): Promise<IDBDatabase> => {
   if (dbPromise) return dbPromise;
-  dbPromise = new Promise((resolve, reject) => {
+  const promise = new Promise<IDBDatabase>((resolve, reject) => {
     if (typeof indexedDB === 'undefined') {
       reject(new Error('IndexedDB недоступен в этом браузере'));
       return;
@@ -29,7 +29,8 @@ const openDb = (): Promise<IDBDatabase> => {
     dbPromise = null;
     throw err;
   });
-  return dbPromise;
+  dbPromise = promise;
+  return promise;
 };
 
 const withStore = <T>(

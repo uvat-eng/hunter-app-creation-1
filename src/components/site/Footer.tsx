@@ -39,6 +39,7 @@ const Footer = ({ onStart }: { onStart: () => void }) => {
                 <li><Link to="/calendar" className="text-hero-text transition-colors hover:text-primary">Календарь охот</Link></li>
                 <li><Link to="/hunts" className="text-hero-text transition-colors hover:text-primary">Дневник</Link></li>
                 <li><Link to="/gear" className="text-hero-text transition-colors hover:text-primary">Оружие</Link></li>
+                <li><Link to="/car" className="text-hero-text transition-colors hover:text-primary">Автомобиль</Link></li>
                 <li><Link to="/map" className="text-hero-text transition-colors hover:text-primary">Карта охот</Link></li>
               </ul>
             </div>

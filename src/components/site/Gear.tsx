@@ -14,6 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { weaponsApi, type WeaponDto, type AccessoryDto } from '@/lib/api';
 import PhotoUploadSlot from './PhotoUploadSlot';
 import MedicalCertificateCard from './MedicalCertificateCard';
+import DocumentCard from './DocumentCard';
 
 type Draft = Omit<WeaponDto, 'id' | 'hunterId'>;
 
@@ -278,7 +279,25 @@ const Gear = ({ hunterId, onCountChange }: { hunterId?: string; onCountChange?: 
           </div>
         )}
 
-        <div className="mt-6">
+        <div className="mt-6 space-y-4">
+          <DocumentCard
+            hunterId={hunterId}
+            type="ticket"
+            title="Охотничий билет"
+            description="Дубликат данных охотничьего билета с фото — под рукой на случай проверки."
+            icon="IdCard"
+            numberLabel="Номер билета"
+            numberPlaceholder="№ 72 000000"
+          />
+          <DocumentCard
+            hunterId={hunterId}
+            type="inspector"
+            title="Удостоверение производственного инспектора"
+            description="Актуально для охотников, состоящих в штате охотхозяйства."
+            icon="ShieldCheck"
+            numberLabel="Номер удостоверения"
+            numberPlaceholder="№ 123"
+          />
           <MedicalCertificateCard hunterId={hunterId} />
         </div>
 
