@@ -10,6 +10,11 @@ const links = [
   { href: '/map', label: 'Карта охот' },
 ];
 
+const legalLinks = [
+  { href: '/privacy', label: 'Политика конфиденциальности' },
+  { href: '/terms', label: 'Условия использования' },
+];
+
 const Header = ({ onStart }: { onStart: () => void }) => {
   const [open, setOpen] = useState(false);
 
@@ -77,6 +82,18 @@ const Header = ({ onStart }: { onStart: () => void }) => {
             >
               Личный кабинет
             </button>
+            <div className="mt-3 flex flex-col gap-1 border-t border-border/60 pt-3">
+              {legalLinks.map((l) => (
+                <Link
+                  key={l.href}
+                  to={l.href}
+                  onClick={() => setOpen(false)}
+                  className="rounded-sm px-3 py-2 text-xs text-hero-muted transition-colors hover:bg-secondary hover:text-hero-text"
+                >
+                  {l.label}
+                </Link>
+              ))}
+            </div>
           </nav>
         </div>
       )}
