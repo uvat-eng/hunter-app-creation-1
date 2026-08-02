@@ -2,10 +2,24 @@ import { useRef, useState } from 'react';
 import Icon from '@/components/ui/icon';
 import { toast } from '@/hooks/use-toast';
 import { exportBackup, importBackup } from '@/lib/backup';
+import { dbGetAll } from '@/lib/local-db';
+import type { HunterDto } from '@/lib/api';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const BackupControls = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleExport = async () => {
     setBusy(true);
@@ -21,10 +35,7 @@ const BackupControls = () => {
 
   const handleImportClick = () => fileRef.current?.click();
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
+  const runImport = async (file: File) => {
     setBusy(true);
     try {
       await importBackup(file);
@@ -38,6 +49,31 @@ const BackupControls = () => {
     } finally {
       setBusy(false);
     }
+  };
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    const existing = await dbGetAll<HunterDto>('hunters');
+    if (existing.length > 0) {
+      setPendingFile(file);
+      setConfirmOpen(true);
+      return;
+    }
+    runImport(file);
+  };
+
+  const confirmImport = () => {
+    setConfirmOpen(false);
+    if (pendingFile) runImport(pendingFile);
+    setPendingFile(null);
+  };
+
+  const cancelImport = () => {
+    setConfirmOpen(false);
+    setPendingFile(null);
   };
 
   return (
@@ -60,6 +96,23 @@ const BackupControls = () => {
         <Icon name="UploadCloud" size={16} /> Восстановить из копии
       </button>
       <input ref={fileRef} type="file" accept="application/json" onChange={handleFile} className="hidden" />
+
+      <AlertDialog open={confirmOpen} onOpenChange={(v) => !v && cancelImport()}>
+        <AlertDialogContent className="border-border bg-hero-surface text-hero-text">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Заменить текущие данные?</AlertDialogTitle>
+            <AlertDialogDescription className="text-hero-muted">
+              На этом телефоне уже есть данные охотника. Восстановление из копии добавит и обновит записи
+              поверх существующих — если в копии есть более старые версии, они могут заменить текущие данные.
+              Рекомендуем сначала сделать свежую резервную копию текущих данных.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelImport}>Отмена</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmImport}>Всё равно восстановить</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
