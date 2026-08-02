@@ -3,8 +3,8 @@
 // хранятся только на телефоне и никуда не передаются.
 
 const DB_NAME = 'hunter-diary-db';
-const DB_VERSION = 2;
-const STORES = ['hunters', 'weapons', 'huntEvents', 'medicalCertificates', 'documents', 'cars'] as const;
+const DB_VERSION = 3;
+const STORES = ['hunters', 'weapons', 'huntEvents', 'medicalCertificates', 'documents', 'cars', 'accessories'] as const;
 type StoreName = (typeof STORES)[number];
 
 let dbPromise: Promise<IDBDatabase> | null = null;

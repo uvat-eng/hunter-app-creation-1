@@ -1,9 +1,9 @@
 // Резервное копирование локальных данных приложения в файл и восстановление из него.
 import { dbGetAll, dbPut } from '@/lib/local-db';
-import type { HunterDto, WeaponDto, HuntEventDto, MedicalCertificateDto, DocumentDto, CarDto } from '@/lib/api';
+import type { HunterDto, WeaponDto, HuntEventDto, MedicalCertificateDto, DocumentDto, CarDto, AccessoryItemDto } from '@/lib/api';
 
 const HUNTER_ID_KEY = 'hunter_diary_hunter_id';
-const BACKUP_VERSION = 2;
+const BACKUP_VERSION = 3;
 
 interface BackupData {
   version: number;
@@ -15,16 +15,18 @@ interface BackupData {
   medicalCertificates: MedicalCertificateDto[];
   documents: DocumentDto[];
   cars: CarDto[];
+  accessories: AccessoryItemDto[];
 }
 
 export const exportBackup = async (): Promise<void> => {
-  const [hunters, weapons, huntEvents, medicalCertificates, documents, cars] = await Promise.all([
+  const [hunters, weapons, huntEvents, medicalCertificates, documents, cars, accessories] = await Promise.all([
     dbGetAll<HunterDto>('hunters'),
     dbGetAll<WeaponDto>('weapons'),
     dbGetAll<HuntEventDto>('huntEvents'),
     dbGetAll<MedicalCertificateDto>('medicalCertificates'),
     dbGetAll<DocumentDto>('documents'),
     dbGetAll<CarDto>('cars'),
+    dbGetAll<AccessoryItemDto>('accessories'),
   ]);
 
   const data: BackupData = {
@@ -37,6 +39,7 @@ export const exportBackup = async (): Promise<void> => {
     medicalCertificates,
     documents,
     cars,
+    accessories,
   };
 
   const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
@@ -70,6 +73,7 @@ export const importBackup = async (file: File): Promise<{ hunterId: string | nul
     ...(data.medicalCertificates || []).map((c) => dbPut('medicalCertificates', c)),
     ...(data.documents || []).map((d) => dbPut('documents', d)),
     ...(data.cars || []).map((c) => dbPut('cars', c)),
+    ...(data.accessories || []).map((a) => dbPut('accessories', a)),
   ]);
 
   const hunterId = data.activeHunterId || data.hunters[0]?.id || null;

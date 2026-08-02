@@ -72,6 +72,7 @@ export interface WeaponDto {
   collimator: AccessoryDto | null;
   photo: string;
   permitPhoto: string;
+  cost: number | null;
 }
 
 export const weaponsApi = {
@@ -266,6 +267,62 @@ export const carsApi = {
   },
   remove: async (id: string) => {
     await dbDelete('cars', id);
+    scheduleSnapshot();
+    return { ok: true };
+  },
+};
+
+export type AccessoryItemType = 'binoculars' | 'thermal_device' | 'other';
+
+export interface AccessoryItemDto {
+  id: string;
+  hunterId: string;
+  type: AccessoryItemType;
+  name: string;
+  params: string;
+  photo: string;
+  cost: number | null;
+}
+
+export const accessoryItemsApi = {
+  list: async (hunterId: string) => {
+    const all = await dbGetAll<AccessoryItemDto>('accessories');
+    return all.filter((a) => a.hunterId === hunterId);
+  },
+  create: async (data: Record<string, unknown>) => {
+    const item: AccessoryItemDto = {
+      id: genId(),
+      hunterId: String(data.hunterId || ''),
+      type: (data.type as AccessoryItemType) || 'other',
+      name: String(data.name || ''),
+      params: String(data.params || ''),
+      photo: String(data.photo || ''),
+      cost: data.cost === null || data.cost === undefined || data.cost === '' ? null : Number(data.cost),
+    };
+    const saved = await dbPut('accessories', item);
+    scheduleSnapshot();
+    return saved;
+  },
+  update: async (id: string, data: Record<string, unknown>) => {
+    const existing = await dbGet<AccessoryItemDto>('accessories', id);
+    const item: AccessoryItemDto = {
+      id,
+      hunterId: existing?.hunterId || String(data.hunterId || ''),
+      type: (data.type as AccessoryItemType) ?? existing?.type ?? 'other',
+      name: String(data.name ?? existing?.name ?? ''),
+      params: String(data.params ?? existing?.params ?? ''),
+      photo: String(data.photo ?? existing?.photo ?? ''),
+      cost:
+        data.cost === null || data.cost === undefined || data.cost === ''
+          ? existing?.cost ?? null
+          : Number(data.cost),
+    };
+    const saved = await dbPut('accessories', item);
+    scheduleSnapshot();
+    return saved;
+  },
+  remove: async (id: string) => {
+    await dbDelete('accessories', id);
     scheduleSnapshot();
     return { ok: true };
   },

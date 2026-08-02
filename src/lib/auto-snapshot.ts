@@ -11,14 +11,14 @@
 // Это НЕ функция «Сохранить / Восстановить» из настроек — та делает файл для переноса
 // данных на другой телефон вручную. Здесь всё происходит незаметно и автоматически.
 
-import type { HunterDto, WeaponDto, HuntEventDto, MedicalCertificateDto, DocumentDto, CarDto } from '@/lib/api';
+import type { HunterDto, WeaponDto, HuntEventDto, MedicalCertificateDto, DocumentDto, CarDto, AccessoryItemDto } from '@/lib/api';
 import { dbGetAll, dbPut } from '@/lib/local-db';
 import { isNativeApp } from '@/lib/native';
 
 const HUNTER_ID_KEY = 'hunter_diary_hunter_id';
 const SNAPSHOT_FILE = 'hunter-diary-snapshot.json';
-const SNAPSHOT_VERSION = 1;
-const STORES = ['hunters', 'weapons', 'huntEvents', 'medicalCertificates', 'documents', 'cars'] as const;
+const SNAPSHOT_VERSION = 2;
+const STORES = ['hunters', 'weapons', 'huntEvents', 'medicalCertificates', 'documents', 'cars', 'accessories'] as const;
 
 interface SnapshotData {
   version: number;
@@ -30,18 +30,20 @@ interface SnapshotData {
   medicalCertificates: MedicalCertificateDto[];
   documents: DocumentDto[];
   cars: CarDto[];
+  accessories: AccessoryItemDto[];
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
 const collectSnapshot = async (): Promise<SnapshotData> => {
-  const [hunters, weapons, huntEvents, medicalCertificates, documents, cars] = await Promise.all([
+  const [hunters, weapons, huntEvents, medicalCertificates, documents, cars, accessories] = await Promise.all([
     dbGetAll<HunterDto>('hunters'),
     dbGetAll<WeaponDto>('weapons'),
     dbGetAll<HuntEventDto>('huntEvents'),
     dbGetAll<MedicalCertificateDto>('medicalCertificates'),
     dbGetAll<DocumentDto>('documents'),
     dbGetAll<CarDto>('cars'),
+    dbGetAll<AccessoryItemDto>('accessories'),
   ]);
   return {
     version: SNAPSHOT_VERSION,
@@ -53,6 +55,7 @@ const collectSnapshot = async (): Promise<SnapshotData> => {
     medicalCertificates,
     documents,
     cars,
+    accessories,
   };
 };
 
@@ -108,6 +111,7 @@ export const restoreFromSnapshotIfEmpty = async (): Promise<void> => {
       ...(snapshot.medicalCertificates || []).map((c) => dbPut('medicalCertificates', c)),
       ...(snapshot.documents || []).map((d) => dbPut('documents', d)),
       ...(snapshot.cars || []).map((c) => dbPut('cars', c)),
+      ...(snapshot.accessories || []).map((a) => dbPut('accessories', a)),
     ]);
 
     if (!localStorage.getItem(HUNTER_ID_KEY)) {

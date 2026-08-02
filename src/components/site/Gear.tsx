@@ -15,6 +15,7 @@ import { weaponsApi, type WeaponDto, type AccessoryDto } from '@/lib/api';
 import PhotoUploadSlot from './PhotoUploadSlot';
 import MedicalCertificateCard from './MedicalCertificateCard';
 import DocumentCard from './DocumentCard';
+import AccessoryItems from './AccessoryItems';
 
 type Draft = Omit<WeaponDto, 'id' | 'hunterId'>;
 
@@ -28,7 +29,10 @@ const emptyDraft = (): Draft => ({
   collimator: null,
   photo: '',
   permitPhoto: '',
+  cost: null,
 });
+
+const formatMoney = (n: number) => n.toLocaleString('ru-RU') + ' ₽';
 
 const steps = [
   { title: 'Марка и калибр', desc: 'Как называется оружие, калибр и фото ствола' },
@@ -59,6 +63,7 @@ const Gear = ({ hunterId, onCountChange }: { hunterId?: string; onCountChange?: 
   const [editId, setEditId] = useState<string | null>(null);
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(emptyDraft());
+  const [costInput, setCostInput] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -84,6 +89,7 @@ const Gear = ({ hunterId, onCountChange }: { hunterId?: string; onCountChange?: 
       return;
     }
     setDraft(emptyDraft());
+    setCostInput('');
     setEditId(null);
     setStep(0);
     setOpen(true);
@@ -92,6 +98,7 @@ const Gear = ({ hunterId, onCountChange }: { hunterId?: string; onCountChange?: 
   const openEdit = (w: WeaponDto) => {
     const { id, hunterId: _h, ...rest } = w;
     setDraft(rest);
+    setCostInput(w.cost !== null && w.cost !== undefined ? String(w.cost) : '');
     setEditId(id);
     setStep(0);
     setOpen(true);
@@ -118,9 +125,10 @@ const Gear = ({ hunterId, onCountChange }: { hunterId?: string; onCountChange?: 
     if (!hunterId) return;
     setSaving(true);
     try {
+      const payload = { ...data, cost: costInput.trim() === '' ? null : Number(costInput) };
       const saved = editId
-        ? await weaponsApi.update(editId, data)
-        : await weaponsApi.create({ ...data, hunterId });
+        ? await weaponsApi.update(editId, payload)
+        : await weaponsApi.create({ ...payload, hunterId });
       setWeapons((ws) => (editId ? ws.map((w) => (w.id === editId ? saved : w)) : [saved, ...ws]));
       toast({ title: editId ? 'Изменения сохранены' : 'Оружие добавлено в учёт', description: saved.name });
       setOpen(false);
@@ -266,6 +274,13 @@ const Gear = ({ hunterId, onCountChange }: { hunterId?: string; onCountChange?: 
                     {w.collimator && <AccessoryRow icon="ScanEye" label="Коллиматор" acc={w.collimator} />}
                   </div>
                 )}
+
+                {w.cost !== null && w.cost !== undefined && (
+                  <div className="mt-4 flex items-center gap-2 border-t border-border pt-4 text-sm font-medium text-primary">
+                    <Icon name="Wallet" size={16} className="shrink-0" />
+                    {formatMoney(w.cost)}
+                  </div>
+                )}
               </div>
             ))}
 
@@ -276,6 +291,15 @@ const Gear = ({ hunterId, onCountChange }: { hunterId?: string; onCountChange?: 
               <Icon name="Plus" size={28} />
               <span className="text-sm font-medium">Добавить оружие</span>
             </button>
+          </div>
+        )}
+
+        {weapons.length > 0 && (
+          <div className="mt-4 flex items-center justify-between rounded-lg border border-primary/40 bg-primary/10 p-5">
+            <div className="text-sm font-medium text-hero-text">Общая стоимость оружейного сейфа</div>
+            <div className="font-head text-2xl font-bold text-primary">
+              {formatMoney(weapons.reduce((sum, w) => sum + (w.cost || 0), 0))}
+            </div>
           </div>
         )}
 
@@ -305,6 +329,8 @@ const Gear = ({ hunterId, onCountChange }: { hunterId?: string; onCountChange?: 
           <Icon name="BellRing" size={20} className="shrink-0 text-primary" />
           Приложение напомнит о продлении разрешений за 60 дней до окончания срока.
         </div>
+
+        <AccessoryItems hunterId={hunterId} />
       </div>
 
       {/* Мастер добавления/редактирования оружия */}
@@ -347,6 +373,18 @@ const Gear = ({ hunterId, onCountChange }: { hunterId?: string; onCountChange?: 
                   value={draft.caliber}
                   onChange={(e) => setDraft((d) => ({ ...d, caliber: e.target.value }))}
                   placeholder="Гладкоствольное · 12×76"
+                  className="mt-1.5 border-border bg-hero-bg"
+                />
+              </div>
+              <div>
+                <Label htmlFor="w-cost" className="text-hero-muted">Стоимость, ₽</Label>
+                <Input
+                  id="w-cost"
+                  type="number"
+                  inputMode="numeric"
+                  value={costInput}
+                  onChange={(e) => setCostInput(e.target.value)}
+                  placeholder="35000"
                   className="mt-1.5 border-border bg-hero-bg"
                 />
               </div>
