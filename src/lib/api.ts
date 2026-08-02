@@ -222,15 +222,23 @@ export interface CarDto {
   maintenance: MaintenanceDto[];
 }
 
+export const MAX_CARS_PER_HUNTER = 5;
+
 export const carsApi = {
-  get: async (hunterId: string) => {
+  list: async (hunterId: string) => {
     const all = await dbGetAll<CarDto>('cars');
-    return all.find((c) => c.hunterId === hunterId) || null;
+    return all.filter((c) => c.hunterId === hunterId);
   },
   create: async (data: Record<string, unknown>) => {
+    const hunterId = String(data.hunterId || '');
+    const existing = await dbGetAll<CarDto>('cars');
+    const count = existing.filter((c) => c.hunterId === hunterId).length;
+    if (count >= MAX_CARS_PER_HUNTER) {
+      throw new Error(`Можно добавить не более ${MAX_CARS_PER_HUNTER} автомобилей`);
+    }
     const car: CarDto = {
       id: genId(),
-      hunterId: String(data.hunterId || ''),
+      hunterId,
       brand: String(data.brand || ''),
       plate: String(data.plate || ''),
       photo: String(data.photo || ''),
@@ -255,6 +263,11 @@ export const carsApi = {
     const saved = await dbPut('cars', car);
     scheduleSnapshot();
     return saved;
+  },
+  remove: async (id: string) => {
+    await dbDelete('cars', id);
+    scheduleSnapshot();
+    return { ok: true };
   },
 };
 
