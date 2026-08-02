@@ -207,6 +207,16 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
   const baseCost = car?.cost || 0;
   const totalCarCost = baseCost + equipmentCost;
 
+  const fleetBaseCost = cars.reduce((sum, c) => sum + (c.cost || 0), 0);
+  const fleetEquipmentCost = cars.reduce(
+    (sum, c) =>
+      sum +
+      c.upgrades.reduce((s, u) => s + (u.cost || 0), 0) +
+      c.maintenance.reduce((s, m) => s + (m.cost || 0), 0),
+    0,
+  );
+  const fleetTotalCost = fleetBaseCost + fleetEquipmentCost;
+
   return (
     <section id="car" className="border-t border-border bg-hero-surface py-20 md:py-28">
       <div className="mx-auto max-w-7xl px-5 md:px-10">
@@ -396,6 +406,25 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
                         ))}
                       </ul>
                     )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {cars.length > 1 && (
+              <div className="mt-6 rounded-lg border border-primary/40 bg-primary/10 p-5">
+                <div className="text-xs uppercase tracking-wide text-hero-muted">
+                  Общая стоимость всех автомобилей ({cars.length})
+                </div>
+                <div className="mt-1 font-head text-3xl font-bold text-primary">{formatMoney(fleetTotalCost)}</div>
+                <div className="mt-4 flex flex-wrap gap-x-8 gap-y-1.5 border-t border-primary/30 pt-3 text-sm text-hero-muted">
+                  <div className="flex items-center gap-2">
+                    <span>Стоимость автомобилей</span>
+                    <span className="font-medium text-hero-text">{formatMoney(fleetBaseCost)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>Доп. оборудование и содержание</span>
+                    <span className="font-medium text-hero-text">{formatMoney(fleetEquipmentCost)}</span>
                   </div>
                 </div>
               </div>

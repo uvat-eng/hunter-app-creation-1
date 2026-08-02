@@ -3,6 +3,7 @@ import type { HunterProfile } from './HunterOnboarding';
 import type { HuntEventDto } from '@/lib/api';
 import Icon from '@/components/ui/icon';
 import BackupControls from './BackupControls';
+import EquipmentSummary from './EquipmentSummary';
 
 const routes = [
   { icon: 'CalendarDays', label: 'Календарь охот', href: '/calendar', desc: 'планы и завершённые охоты' },
@@ -98,6 +99,8 @@ const Cabinet = ({ profile, events = [], weaponsCount = 0, onStart }: Props) => 
                 Заполнить свою анкету <Icon name="ArrowRight" size={16} />
               </button>
             )}
+
+            <EquipmentSummary hunterId={profile?.id} />
 
             <BackupControls />
           </div>
