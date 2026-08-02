@@ -3,8 +3,18 @@ import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 import { initNativeApp, isNativeApp } from './lib/native';
+import { restoreFromSnapshotIfEmpty } from './lib/auto-snapshot';
 
-createRoot(document.getElementById("root")!).render(<App />);
+const mount = () => createRoot(document.getElementById("root")!).render(<App />);
+
+// На нативном приложении перед первым рендером проверяем: если основное хранилище
+// пустое (например, после обновления версии из RuStore что-то пошло не так с базой),
+// автоматически подтягиваем данные из технического снимка — без каких-либо действий пользователя.
+if (isNativeApp) {
+  restoreFromSnapshotIfEmpty().finally(mount);
+} else {
+  mount();
+}
 
 initNativeApp();
 

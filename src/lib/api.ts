@@ -1,5 +1,6 @@
 // Все данные приложения хранятся локально на устройстве (IndexedDB) — не передаются на сервер.
 import { dbGet, dbGetAll, dbPut, dbDelete, genId } from '@/lib/local-db';
+import { scheduleSnapshot } from '@/lib/auto-snapshot';
 
 export interface HunterDto {
   id: string;
@@ -31,7 +32,9 @@ export const huntersApi = {
       weapon: String(data.weapon || ''),
       game: String(data.game || ''),
     };
-    return dbPut('hunters', hunter);
+    const saved = await dbPut('hunters', hunter);
+    scheduleSnapshot();
+    return saved;
   },
   update: async (id: string, data: Record<string, unknown>) => {
     const existing = await dbGet<HunterDto>('hunters', id);
@@ -46,7 +49,9 @@ export const huntersApi = {
       weapon: String(data.weapon ?? existing?.weapon ?? ''),
       game: String(data.game ?? existing?.game ?? ''),
     };
-    return dbPut('hunters', hunter);
+    const saved = await dbPut('hunters', hunter);
+    scheduleSnapshot();
+    return saved;
   },
 };
 
@@ -76,15 +81,20 @@ export const weaponsApi = {
   },
   create: async (data: Record<string, unknown>) => {
     const weapon = { ...data, id: genId() } as WeaponDto;
-    return dbPut('weapons', weapon);
+    const saved = await dbPut('weapons', weapon);
+    scheduleSnapshot();
+    return saved;
   },
   update: async (id: string, data: Record<string, unknown>) => {
     const existing = await dbGet<WeaponDto>('weapons', id);
     const weapon = { ...existing, ...data, id } as WeaponDto;
-    return dbPut('weapons', weapon);
+    const saved = await dbPut('weapons', weapon);
+    scheduleSnapshot();
+    return saved;
   },
   remove: async (id: string) => {
     await dbDelete('weapons', id);
+    scheduleSnapshot();
     return { ok: true };
   },
 };
@@ -123,7 +133,9 @@ export const medicalCertificatesApi = {
       expiresDate: withExpiresDate(issueDate),
       photo: String(data.photo || ''),
     };
-    return dbPut('medicalCertificates', cert);
+    const saved = await dbPut('medicalCertificates', cert);
+    scheduleSnapshot();
+    return saved;
   },
   update: async (id: string, data: Record<string, unknown>) => {
     const existing = await dbGet<MedicalCertificateDto>('medicalCertificates', id);
@@ -136,7 +148,9 @@ export const medicalCertificatesApi = {
       expiresDate: withExpiresDate(issueDate),
       photo: String(data.photo ?? existing?.photo ?? ''),
     };
-    return dbPut('medicalCertificates', cert);
+    const saved = await dbPut('medicalCertificates', cert);
+    scheduleSnapshot();
+    return saved;
   },
 };
 
@@ -165,7 +179,9 @@ export const documentsApi = {
       issueDate: String(data.issueDate || ''),
       photo: String(data.photo || ''),
     };
-    return dbPut('documents', doc);
+    const saved = await dbPut('documents', doc);
+    scheduleSnapshot();
+    return saved;
   },
   update: async (id: string, data: Record<string, unknown>) => {
     const existing = await dbGet<DocumentDto>('documents', id);
@@ -177,7 +193,9 @@ export const documentsApi = {
       issueDate: String(data.issueDate ?? existing?.issueDate ?? ''),
       photo: String(data.photo ?? existing?.photo ?? ''),
     };
-    return dbPut('documents', doc);
+    const saved = await dbPut('documents', doc);
+    scheduleSnapshot();
+    return saved;
   },
 };
 
@@ -219,7 +237,9 @@ export const carsApi = {
       upgrades: (data.upgrades as CarUpgradeDto[]) || [],
       maintenance: (data.maintenance as MaintenanceDto[]) || [],
     };
-    return dbPut('cars', car);
+    const saved = await dbPut('cars', car);
+    scheduleSnapshot();
+    return saved;
   },
   update: async (id: string, data: Record<string, unknown>) => {
     const existing = await dbGet<CarDto>('cars', id);
@@ -232,7 +252,9 @@ export const carsApi = {
       upgrades: (data.upgrades as CarUpgradeDto[]) ?? existing?.upgrades ?? [],
       maintenance: (data.maintenance as MaintenanceDto[]) ?? existing?.maintenance ?? [],
     };
-    return dbPut('cars', car);
+    const saved = await dbPut('cars', car);
+    scheduleSnapshot();
+    return saved;
   },
 };
 
@@ -269,15 +291,20 @@ export const huntEventsApi = {
   },
   create: async (data: Record<string, unknown>) => {
     const event = { ...data, id: genId() } as HuntEventDto;
-    return dbPut('huntEvents', event);
+    const saved = await dbPut('huntEvents', event);
+    scheduleSnapshot();
+    return saved;
   },
   update: async (id: string, data: Record<string, unknown>) => {
     const existing = await dbGet<HuntEventDto>('huntEvents', id);
     const event = { ...existing, ...data, id } as HuntEventDto;
-    return dbPut('huntEvents', event);
+    const saved = await dbPut('huntEvents', event);
+    scheduleSnapshot();
+    return saved;
   },
   remove: async (id: string) => {
     await dbDelete('huntEvents', id);
+    scheduleSnapshot();
     return { ok: true };
   },
 };
