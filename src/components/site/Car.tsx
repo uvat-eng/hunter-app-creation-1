@@ -19,6 +19,7 @@ const emptyCar = (): Omit<CarDto, 'id' | 'hunterId'> => ({
   brand: '',
   plate: '',
   photo: '',
+  cost: null,
   upgrades: [],
   maintenance: [],
 });
@@ -33,10 +34,11 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
   const [carOpen, setCarOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [carDraft, setCarDraft] = useState<Omit<CarDto, 'id' | 'hunterId'>>(emptyCar());
+  const [carCostInput, setCarCostInput] = useState('');
   const [saving, setSaving] = useState(false);
 
   const [upgradeOpen, setUpgradeOpen] = useState(false);
-  const [upgradeDraft, setUpgradeDraft] = useState({ name: '', note: '' });
+  const [upgradeDraft, setUpgradeDraft] = useState({ name: '', note: '', cost: '' });
 
   const [serviceOpen, setServiceOpen] = useState(false);
   const [serviceDraft, setServiceDraft] = useState({ date: '', description: '', cost: '' });
@@ -92,13 +94,15 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
       return;
     }
     setCarDraft(emptyCar());
+    setCarCostInput('');
     setEditId(null);
     setCarOpen(true);
   };
 
   const openEditCar = () => {
     if (!car) return;
-    setCarDraft({ brand: car.brand, plate: car.plate, photo: car.photo, upgrades: car.upgrades, maintenance: car.maintenance });
+    setCarDraft({ brand: car.brand, plate: car.plate, photo: car.photo, cost: car.cost, upgrades: car.upgrades, maintenance: car.maintenance });
+    setCarCostInput(car.cost !== null && car.cost !== undefined ? String(car.cost) : '');
     setEditId(car.id);
     setCarOpen(true);
   };
@@ -108,7 +112,8 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
       toast({ title: 'Укажите марку и госномер' });
       return;
     }
-    const saved = await persist(editId, carDraft);
+    const payload = { ...carDraft, cost: carCostInput.trim() === '' ? null : Number(carCostInput) };
+    const saved = await persist(editId, payload);
     if (saved) {
       toast({ title: editId ? 'Изменения сохранены' : 'Автомобиль добавлен' });
       setCarOpen(false);
@@ -137,7 +142,7 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
       toast({ title: 'Сначала добавьте автомобиль' });
       return;
     }
-    setUpgradeDraft({ name: '', note: '' });
+    setUpgradeDraft({ name: '', note: '', cost: '' });
     setUpgradeOpen(true);
   };
 
@@ -146,7 +151,12 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
       toast({ title: 'Укажите название апгрейда' });
       return;
     }
-    const upgrade: CarUpgradeDto = { id: genId(), name: upgradeDraft.name, note: upgradeDraft.note };
+    const upgrade: CarUpgradeDto = {
+      id: genId(),
+      name: upgradeDraft.name,
+      note: upgradeDraft.note,
+      cost: upgradeDraft.cost.trim() === '' ? null : Number(upgradeDraft.cost),
+    };
     const saved = await persist(car.id, { ...car, upgrades: [upgrade, ...car.upgrades] });
     if (saved) {
       toast({ title: 'Апгрейд добавлен' });
@@ -191,7 +201,11 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
     await persist(car.id, { ...car, maintenance: car.maintenance.filter((m) => m.id !== id) });
   };
 
-  const totalSpent = (car?.maintenance || []).reduce((sum, m) => sum + (m.cost || 0), 0);
+  const maintenanceCost = (car?.maintenance || []).reduce((sum, m) => sum + (m.cost || 0), 0);
+  const upgradesCost = (car?.upgrades || []).reduce((sum, u) => sum + (u.cost || 0), 0);
+  const equipmentCost = maintenanceCost + upgradesCost;
+  const baseCost = car?.cost || 0;
+  const totalCarCost = baseCost + equipmentCost;
 
   return (
     <section id="car" className="border-t border-border bg-hero-surface py-20 md:py-28">
@@ -286,8 +300,26 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
                   </div>
 
                   <div className="mt-4 rounded-lg border border-primary/40 bg-primary/10 p-5">
-                    <div className="text-xs uppercase tracking-wide text-hero-muted">Всего потрачено на обслуживание</div>
-                    <div className="mt-1 font-head text-3xl font-bold text-primary">{formatMoney(totalSpent)}</div>
+                    <div className="text-xs uppercase tracking-wide text-hero-muted">Общая стоимость автомобиля</div>
+                    <div className="mt-1 font-head text-3xl font-bold text-primary">{formatMoney(totalCarCost)}</div>
+                    <div className="mt-4 space-y-1.5 border-t border-primary/30 pt-3 text-sm text-hero-muted">
+                      <div className="flex items-center justify-between">
+                        <span>Стоимость автомобиля</span>
+                        <span className="font-medium text-hero-text">{formatMoney(baseCost)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Доп. оборудование и содержание</span>
+                        <span className="font-medium text-hero-text">{formatMoney(equipmentCost)}</span>
+                      </div>
+                      <div className="flex items-center justify-between pl-3 text-xs">
+                        <span>— апгрейды</span>
+                        <span>{formatMoney(upgradesCost)}</span>
+                      </div>
+                      <div className="flex items-center justify-between pl-3 text-xs">
+                        <span>— техобслуживание</span>
+                        <span>{formatMoney(maintenanceCost)}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -312,6 +344,9 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
                             <div className="min-w-0 flex-1">
                               <div className="text-sm font-medium text-hero-text">{u.name}</div>
                               {u.note && <div className="text-xs text-hero-muted">{u.note}</div>}
+                              {u.cost !== null && u.cost !== undefined && (
+                                <div className="mt-0.5 text-xs font-medium text-primary">{formatMoney(u.cost)}</div>
+                              )}
                             </div>
                             <button
                               onClick={() => removeUpgrade(u.id)}
@@ -398,6 +433,18 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
                 className="mt-1.5 border-border bg-hero-bg uppercase"
               />
             </div>
+            <div>
+              <Label htmlFor="car-cost" className="text-hero-muted">Стоимость автомобиля, ₽</Label>
+              <Input
+                id="car-cost"
+                type="number"
+                inputMode="numeric"
+                value={carCostInput}
+                onChange={(e) => setCarCostInput(e.target.value)}
+                placeholder="850000"
+                className="mt-1.5 border-border bg-hero-bg"
+              />
+            </div>
             <PhotoUploadSlot
               label="Фото автомобиля"
               photo={carDraft.photo}
@@ -440,6 +487,18 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
                 value={upgradeDraft.note}
                 onChange={(e) => setUpgradeDraft((d) => ({ ...d, note: e.target.value }))}
                 placeholder="Модель, характеристики"
+                className="mt-1.5 border-border bg-hero-bg"
+              />
+            </div>
+            <div>
+              <Label htmlFor="up-cost" className="text-hero-muted">Стоимость, ₽</Label>
+              <Input
+                id="up-cost"
+                type="number"
+                inputMode="numeric"
+                value={upgradeDraft.cost}
+                onChange={(e) => setUpgradeDraft((d) => ({ ...d, cost: e.target.value }))}
+                placeholder="25000"
                 className="mt-1.5 border-border bg-hero-bg"
               />
             </div>

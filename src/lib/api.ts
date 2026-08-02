@@ -204,6 +204,7 @@ export interface CarUpgradeDto {
   id: string;
   name: string;
   note: string;
+  cost: number | null;
 }
 
 export interface MaintenanceDto {
@@ -219,6 +220,7 @@ export interface CarDto {
   brand: string;
   plate: string;
   photo: string;
+  cost: number | null;
   upgrades: CarUpgradeDto[];
   maintenance: MaintenanceDto[];
 }
@@ -243,6 +245,7 @@ export const carsApi = {
       brand: String(data.brand || ''),
       plate: String(data.plate || ''),
       photo: String(data.photo || ''),
+      cost: data.cost === null || data.cost === undefined || data.cost === '' ? null : Number(data.cost),
       upgrades: (data.upgrades as CarUpgradeDto[]) || [],
       maintenance: (data.maintenance as MaintenanceDto[]) || [],
     };
@@ -258,6 +261,10 @@ export const carsApi = {
       brand: String(data.brand ?? existing?.brand ?? ''),
       plate: String(data.plate ?? existing?.plate ?? ''),
       photo: String(data.photo ?? existing?.photo ?? ''),
+      cost:
+        data.cost === null || data.cost === undefined || data.cost === ''
+          ? existing?.cost ?? null
+          : Number(data.cost),
       upgrades: (data.upgrades as CarUpgradeDto[]) ?? existing?.upgrades ?? [],
       maintenance: (data.maintenance as MaintenanceDto[]) ?? existing?.maintenance ?? [],
     };
