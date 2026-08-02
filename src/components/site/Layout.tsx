@@ -3,7 +3,7 @@ import Header from './Header';
 import Footer from './Footer';
 import HunterOnboarding from './HunterOnboarding';
 import ScrollToTop from './ScrollToTop';
-import { useHunter } from '@/contexts/HunterContext';
+import { useHunter } from '@/hooks/use-hunter';
 
 const Layout = () => {
   const { authOpen, setAuthOpen, handleComplete } = useHunter();

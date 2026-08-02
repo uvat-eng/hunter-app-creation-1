@@ -1,6 +1,6 @@
 import Hero from '@/components/site/Hero';
 import Cabinet from '@/components/site/Cabinet';
-import { useHunter } from '@/contexts/HunterContext';
+import { useHunter } from '@/hooks/use-hunter';
 
 const Index = () => {
   const { profile, events, weaponsCount, setAuthOpen } = useHunter();

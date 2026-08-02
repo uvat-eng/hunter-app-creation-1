@@ -1,5 +1,5 @@
 import Hunts from '@/components/site/Hunts';
-import { useHunter } from '@/contexts/HunterContext';
+import { useHunter } from '@/hooks/use-hunter';
 
 const HuntsPage = () => {
   const { profile, events, eventsLoading, upsertEvent, removeEvent } = useHunter();

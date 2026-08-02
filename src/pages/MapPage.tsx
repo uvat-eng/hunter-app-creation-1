@@ -1,5 +1,5 @@
 import HuntMap from '@/components/site/HuntMap';
-import { useHunter } from '@/contexts/HunterContext';
+import { useHunter } from '@/hooks/use-hunter';
 
 const MapPage = () => {
   const { profile, events, eventsLoading } = useHunter();

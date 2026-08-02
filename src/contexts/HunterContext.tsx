@@ -1,25 +1,10 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { huntersApi } from '@/lib/api';
-import type { HuntEventDto } from '@/lib/api';
 import { useHuntEvents } from '@/hooks/use-hunt-events';
 import type { HunterProfile } from '@/components/site/HunterOnboarding';
+import { HunterContext } from '@/contexts/hunter-context-def';
 
 const HUNTER_ID_KEY = 'hunter_diary_hunter_id';
-
-interface HunterContextValue {
-  profile: HunterProfile | null;
-  handleComplete: (p: HunterProfile) => void;
-  events: HuntEventDto[];
-  eventsLoading: boolean;
-  upsertEvent: (saved: HuntEventDto) => void;
-  removeEvent: (id: string) => void;
-  weaponsCount: number;
-  setWeaponsCount: (n: number) => void;
-  authOpen: boolean;
-  setAuthOpen: (v: boolean) => void;
-}
-
-const HunterContext = createContext<HunterContextValue | null>(null);
 
 export const HunterProvider = ({ children }: { children: ReactNode }) => {
   const [authOpen, setAuthOpen] = useState(false);
@@ -71,10 +56,4 @@ export const HunterProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </HunterContext.Provider>
   );
-};
-
-export const useHunter = () => {
-  const ctx = useContext(HunterContext);
-  if (!ctx) throw new Error('useHunter must be used within HunterProvider');
-  return ctx;
 };

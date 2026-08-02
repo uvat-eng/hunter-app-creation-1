@@ -1,5 +1,5 @@
 import MyCalendar from '@/components/site/MyCalendar';
-import { useHunter } from '@/contexts/HunterContext';
+import { useHunter } from '@/hooks/use-hunter';
 
 const CalendarPage = () => {
   const { profile, events, eventsLoading, upsertEvent, removeEvent } = useHunter();

@@ -1,5 +1,5 @@
 import Car from '@/components/site/Car';
-import { useHunter } from '@/contexts/HunterContext';
+import { useHunter } from '@/hooks/use-hunter';
 
 const CarPage = () => {
   const { profile } = useHunter();
