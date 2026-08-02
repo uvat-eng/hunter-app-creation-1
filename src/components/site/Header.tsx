@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '@/components/ui/icon';
+import LegalDialog, { type LegalDoc } from '@/components/site/LegalDialog';
 
 const links = [
   { href: '/', label: 'Кабинет' },
@@ -10,13 +11,14 @@ const links = [
   { href: '/map', label: 'Карта охот' },
 ];
 
-const legalLinks = [
-  { href: '/privacy', label: 'Политика конфиденциальности' },
-  { href: '/terms', label: 'Условия использования' },
+const legalLinks: { doc: LegalDoc; label: string }[] = [
+  { doc: 'privacy', label: 'Политика конфиденциальности' },
+  { doc: 'terms', label: 'Условия использования' },
 ];
 
 const Header = ({ onStart }: { onStart: () => void }) => {
   const [open, setOpen] = useState(false);
+  const [legalDoc, setLegalDoc] = useState<LegalDoc>(null);
 
   return (
     <header
@@ -84,19 +86,24 @@ const Header = ({ onStart }: { onStart: () => void }) => {
             </button>
             <div className="mt-3 flex flex-col gap-1 border-t border-border/60 pt-3">
               {legalLinks.map((l) => (
-                <Link
-                  key={l.href}
-                  to={l.href}
-                  onClick={() => setOpen(false)}
-                  className="rounded-sm px-3 py-2 text-xs text-hero-muted transition-colors hover:bg-secondary hover:text-hero-text"
+                <button
+                  key={l.doc}
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    setLegalDoc(l.doc);
+                  }}
+                  className="rounded-sm px-3 py-2 text-left text-xs text-hero-muted transition-colors hover:bg-secondary hover:text-hero-text"
                 >
                   {l.label}
-                </Link>
+                </button>
               ))}
             </div>
           </nav>
         </div>
       )}
+
+      <LegalDialog doc={legalDoc} onOpenChange={(v) => !v && setLegalDoc(null)} />
     </header>
   );
 };

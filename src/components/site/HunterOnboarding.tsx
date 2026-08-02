@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import Icon from '@/components/ui/icon';
 import { toast } from '@/hooks/use-toast';
 import { huntersApi } from '@/lib/api';
+import LegalDialog, { type LegalDoc } from '@/components/site/LegalDialog';
 
 export interface HunterProfile {
   id?: string;
@@ -50,6 +51,7 @@ const HunterOnboarding = ({
     game: 'Перо',
   });
   const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [legalDoc, setLegalDoc] = useState<LegalDoc>(null);
 
   const set = (k: keyof HunterProfile, v: string) => {
     setForm((f) => ({ ...f, [k]: v }));
@@ -255,9 +257,22 @@ const HunterOnboarding = ({
                 {saving ? 'Сохраняем…' : 'Открыть кабинет'} <Icon name={saving ? 'Loader2' : 'Check'} size={18} className={saving ? 'animate-spin' : ''} />
               </button>
             </div>
+            <p className="text-center text-xs leading-relaxed text-hero-muted">
+              Все данные хранятся только на вашем устройстве и никуда не передаются. Нажимая «Открыть кабинет»,
+              вы соглашаетесь с{' '}
+              <button type="button" onClick={() => setLegalDoc('privacy')} className="text-hero-text underline hover:text-primary">
+                политикой конфиденциальности
+              </button>{' '}
+              и{' '}
+              <button type="button" onClick={() => setLegalDoc('terms')} className="text-hero-text underline hover:text-primary">
+                условиями использования
+              </button>
+              .
+            </p>
           </div>
         )}
       </DialogContent>
+      <LegalDialog doc={legalDoc} onOpenChange={(v) => !v && setLegalDoc(null)} />
     </Dialog>
   );
 };
