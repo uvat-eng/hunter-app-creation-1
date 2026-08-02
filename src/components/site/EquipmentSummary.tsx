@@ -6,9 +6,9 @@ import { getEquipmentTotals, type EquipmentTotals } from '@/lib/equipment-totals
 const formatMoney = (n: number) => n.toLocaleString('ru-RU') + ' ₽';
 
 const rows = [
-  { key: 'weaponsCost' as const, icon: 'Target', label: 'Оружие', href: '/gear' },
-  { key: 'accessoriesCost' as const, icon: 'Binoculars', label: 'Оружейные аксессуары', href: '/gear' },
-  { key: 'carsTotalCost' as const, icon: 'Car', label: 'Автомобили', href: '/car' },
+  { key: 'weaponryBudget' as const, icon: 'Target', label: 'Оружейный бюджет', href: '/gear' },
+  { key: 'carsTotalCost' as const, icon: 'Car', label: 'Автомобильный бюджет', href: '/car' },
+  { key: 'huntsBudget' as const, icon: 'CalendarDays', label: 'Бюджет выездов', href: '/hunts' },
 ];
 
 const EquipmentSummary = ({ hunterId }: { hunterId?: string }) => {
@@ -29,21 +29,25 @@ const EquipmentSummary = ({ hunterId }: { hunterId?: string }) => {
   if (!hunterId || loading || !totals || totals.grandTotal === 0) return null;
 
   return (
-    <div className="mt-6 rounded-lg border border-primary/40 bg-primary/10 p-6">
-      <div className="text-xs uppercase tracking-wide text-hero-muted">Общая стоимость имущества охотника</div>
-      <div className="mt-1 font-head text-3xl font-bold text-primary md:text-4xl">{formatMoney(totals.grandTotal)}</div>
+    <div className="mt-8 rounded-lg border border-primary/40 bg-primary/10 px-6 py-6 md:px-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <span className="font-head text-lg font-bold uppercase tracking-wide text-hero-text md:text-xl">
+          Бюджет охотника
+        </span>
+        <span className="font-head text-3xl font-bold text-primary md:text-4xl">
+          {formatMoney(totals.grandTotal)}
+        </span>
+      </div>
 
-      <div className="mt-5 space-y-3 border-t border-primary/30 pt-4">
+      <div className="mt-5 flex flex-wrap gap-x-10 gap-y-3 border-t border-primary/30 pt-4">
         {rows.map((r) => (
           <Link
             key={r.key}
             to={r.href}
-            className="flex items-center justify-between gap-3 text-sm transition-colors hover:text-primary"
+            className="flex items-center gap-2 text-sm text-hero-muted transition-colors hover:text-primary"
           >
-            <span className="flex items-center gap-2 text-hero-muted">
-              <Icon name={r.icon} size={15} className="shrink-0 text-primary" />
-              {r.label}
-            </span>
+            <Icon name={r.icon} size={14} className="shrink-0 text-primary" />
+            {r.label}
             <span className="font-medium text-hero-text">{formatMoney(totals[r.key])}</span>
           </Link>
         ))}

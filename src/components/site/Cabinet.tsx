@@ -100,8 +100,6 @@ const Cabinet = ({ profile, events = [], weaponsCount = 0, onStart }: Props) => 
               </button>
             )}
 
-            <EquipmentSummary hunterId={profile?.id} />
-
             <BackupControls />
           </div>
 
@@ -126,6 +124,8 @@ const Cabinet = ({ profile, events = [], weaponsCount = 0, onStart }: Props) => 
             ))}
           </div>
         </div>
+
+        <EquipmentSummary hunterId={profile?.id} />
       </div>
     </section>
   );
