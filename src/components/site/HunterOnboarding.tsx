@@ -51,7 +51,10 @@ const HunterOnboarding = ({
   });
   const [errors, setErrors] = useState<Record<string, boolean>>({});
 
-  const set = (k: keyof HunterProfile, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: keyof HunterProfile, v: string) => {
+    setForm((f) => ({ ...f, [k]: v }));
+    setErrors((e) => (e[k] ? { ...e, [k]: false } : e));
+  };
 
   const onPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -93,7 +96,8 @@ const HunterOnboarding = ({
       onOpenChange(false);
       setStep(0);
       navigate('/');
-    } catch {
+    } catch (err) {
+      console.error('Не удалось сохранить анкету охотника:', err);
       toast({ title: 'Не удалось сохранить анкету', description: 'Попробуйте ещё раз.' });
     } finally {
       setSaving(false);

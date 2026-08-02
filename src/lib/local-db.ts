@@ -12,6 +12,10 @@ let dbPromise: Promise<IDBDatabase> | null = null;
 const openDb = (): Promise<IDBDatabase> => {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise((resolve, reject) => {
+    if (typeof indexedDB === 'undefined') {
+      reject(new Error('IndexedDB недоступен в этом браузере'));
+      return;
+    }
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const db = req.result;
@@ -20,7 +24,10 @@ const openDb = (): Promise<IDBDatabase> => {
       });
     };
     req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onerror = () => reject(req.error || new Error('Не удалось открыть локальную базу данных'));
+  }).catch((err) => {
+    dbPromise = null;
+    throw err;
   });
   return dbPromise;
 };
@@ -37,7 +44,9 @@ const withStore = <T>(
         const os = tx.objectStore(store);
         const req = fn(os);
         req.onsuccess = () => resolve(req.result);
-        req.onerror = () => reject(req.error);
+        req.onerror = () => reject(req.error || new Error(`Ошибка операции с хранилищем "${store}"`));
+        tx.onerror = () => reject(tx.error || new Error(`Ошибка транзакции в хранилище "${store}"`));
+        tx.onabort = () => reject(tx.error || new Error(`Транзакция в хранилище "${store}" прервана`));
       }),
   );
 
