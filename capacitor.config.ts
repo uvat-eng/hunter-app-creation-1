@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'ru.hunterdiary.app',
+  appId: 'ru.hunterdiary.app.pro',
   appName: 'Охотник',
   webDir: 'dist',
   server: {

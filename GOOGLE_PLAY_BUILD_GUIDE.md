@@ -5,7 +5,7 @@
 Разница только в формате собираемого файла и в шагах внутри Google Play Console.
 
 ## Что уже готово и переиспользуется из подготовки к RuStore
-- appId: `ru.hunterdiary.app`, название: «Охотник», версия 1.0
+- appId: `ru.hunterdiary.app.pro`, название: «Охотник»
 - Нативный проект `android/` (Capacitor), иконки, разрешения, загрузочный экран
 - targetSdkVersion 36 / minSdkVersion 24 / compileSdkVersion 36 — выше минимальных требований Google Play (targetSdk 34+)
 - Иконка 512×512 для карточки: `public/icons/icon-512.png` (без прозрачности — подходит под формат Google Play)
@@ -79,8 +79,11 @@ npx cap open android
 - Google Play использует свою систему подписи (Play App Signing) — при первой загрузке .aab
   система предложит зарегистрировать ключ, соглашайтесь
 - После любых правок в коде: `npm run build` → `npx cap sync android` → пересборка в Android Studio
-- Bundle ID/appId должен совпадать везде: `capacitor.config.ts` и карточка в Google Play Console —
-  `ru.hunterdiary.app`. Один и тот же appId можно использовать и в RuStore, и в Google Play —
-  это разные площадки, конфликта не будет
+- Bundle ID/appId должен совпадать везде: `capacitor.config.ts`, `android/app/build.gradle`
+  и карточка в Google Play Console — `ru.hunterdiary.app.pro`. Один и тот же appId можно использовать
+  и в RuStore, и в Google Play — это разные площадки, конфликта не будет
+- Не меняйте `applicationId` и увеличивайте `versionCode` перед каждой новой сборкой — иначе
+  обновление не "ляжет" поверх старой версии и данные пользователей (профиль, документы с фото,
+  события охоты) не перенесутся автоматически
 - Раздел «Безопасность данных» и опросник контент-рейтинга — специфика именно Google Play,
   в RuStore их нет
