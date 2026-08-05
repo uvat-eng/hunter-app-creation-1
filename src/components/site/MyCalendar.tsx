@@ -8,6 +8,7 @@ import { SPECIES, matchSpecies } from '@/lib/hunt-species';
 import HuntEventEditor from './HuntEventEditor';
 import HuntEventViewer from './HuntEventViewer';
 import WeatherBadge from './WeatherBadge';
+import { getMoonPhase } from '@/lib/moon';
 
 const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const months = [
@@ -150,10 +151,14 @@ const MyCalendar = ({ hunterId, events = [], loading, onUpsert, onRemove }: Prop
                 const hasPlanned = dayEvents.some((e) => e.status === 'planned');
                 const hasDone = dayEvents.some((e) => e.status === 'done');
                 const dateStr = `${view.y}-${String(view.m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const moonPhase = getMoonPhase(dateStr).phaseIndex;
+                const isFullMoon = moonPhase === 4;
+                const isNewMoon = moonPhase === 0;
                 return (
                   <button
                     key={i}
                     onClick={() => (dayEvents.length ? openView(dayEvents[0]) : openAdd(dateStr))}
+                    title={isFullMoon ? 'Полнолуние' : isNewMoon ? 'Новолуние' : undefined}
                     className={`relative aspect-square rounded-sm text-sm font-medium transition-all ${
                       dayEvents.length
                         ? 'bg-primary/15 text-hero-text hover:bg-primary/25'
@@ -161,6 +166,13 @@ const MyCalendar = ({ hunterId, events = [], loading, onUpsert, onRemove }: Prop
                     }`}
                   >
                     {d}
+                    {(isFullMoon || isNewMoon) && (
+                      <Icon
+                        name="Moon"
+                        size={11}
+                        className={`absolute right-1 top-1 ${isFullMoon ? 'text-primary' : 'text-hero-muted'}`}
+                      />
+                    )}
                     {dayEvents.length > 0 && (
                       <span className="absolute bottom-1 left-1/2 flex -translate-x-1/2 gap-0.5">
                         {hasPlanned && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
@@ -178,6 +190,9 @@ const MyCalendar = ({ hunterId, events = [], loading, onUpsert, onRemove }: Prop
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full bg-hero-muted" /> состоялось
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Icon name="Moon" size={13} className="text-primary" /> полнолуние / новолуние
               </span>
             </div>
 

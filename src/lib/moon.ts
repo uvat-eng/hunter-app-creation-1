@@ -7,6 +7,10 @@ export interface MoonPhase {
   phaseIndex: number;
   label: string;
   icon: string;
+  /** true в день, ближайший к пику полнолуния (±1 сутки) */
+  isFullMoonPeak: boolean;
+  /** true в день, ближайший к пику новолуния (±1 сутки) */
+  isNewMoonPeak: boolean;
 }
 
 const SYNODIC_MONTH = 29.530588853;
