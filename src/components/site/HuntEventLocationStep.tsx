@@ -1,6 +1,7 @@
 import Icon from '@/components/ui/icon';
 import { Label } from '@/components/ui/label';
 import HuntPlacePicker from './HuntPlacePicker';
+import WeatherWidget from './WeatherWidget';
 import type { Draft } from './HuntEventEditor';
 
 interface LocationProps {
@@ -29,6 +30,10 @@ export const HuntEventLocationStep = ({ draft, setDraft }: LocationProps) => (
         />
       </div>
     </div>
+
+    {draft.lat !== null && draft.lng !== null && draft.date && (
+      <WeatherWidget lat={draft.lat} lng={draft.lng} date={draft.date} />
+    )}
   </div>
 );
 
