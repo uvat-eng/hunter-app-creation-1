@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Icon from '@/components/ui/icon';
 import { fetchForecast, weatherCodeToIcon, type DailyWeather } from '@/lib/weather';
+import { getMoonPhase } from '@/lib/moon';
 
 interface Props {
   lat: number | null;
@@ -32,12 +33,24 @@ const WeatherBadge = ({ lat, lng, date, className = '' }: Props) => {
     };
   }, [lat, lng, date]);
 
-  if (!day) return null;
+  if (!day && !date) return null;
+
+  const moon = date ? getMoonPhase(date) : null;
 
   return (
-    <span className={`flex items-center gap-1 text-xs text-hero-muted ${className}`}>
-      <Icon name={weatherCodeToIcon(day.weatherCode)} size={14} className="text-primary" />
-      {day.tempMax}° / {day.tempMin}°
+    <span className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-hero-muted ${className}`}>
+      {day && (
+        <span className="flex items-center gap-1">
+          <Icon name={weatherCodeToIcon(day.weatherCode)} size={14} className="text-primary" />
+          {day.tempMax}° / {day.tempMin}°
+        </span>
+      )}
+      {moon && (
+        <span className="flex items-center gap-1">
+          <Icon name={moon.icon} size={14} className="text-primary" />
+          {moon.label}
+        </span>
+      )}
     </span>
   );
 };

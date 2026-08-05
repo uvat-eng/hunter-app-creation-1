@@ -9,6 +9,7 @@ import {
   dayMonthShort,
   type DailyWeather,
 } from '@/lib/weather';
+import { getMoonPhase } from '@/lib/moon';
 
 interface Props {
   lat: number | null;
@@ -90,6 +91,16 @@ const WeatherWidget = ({ lat, lng, date, className = '' }: Props) => {
               </div>
             ))}
           </div>
+
+          {date && (
+            <div className="mt-4 flex items-center gap-3 rounded-sm border border-border bg-hero-bg px-3 py-2.5">
+              <Icon name={getMoonPhase(date).icon} size={18} className="text-primary" />
+              <span className="text-sm text-hero-text">{getMoonPhase(date).label}</span>
+              <span className="text-xs text-hero-muted">
+                освещённость {Math.round(getMoonPhase(date).illumination * 100)}%
+              </span>
+            </div>
+          )}
 
           {date && (
             <div className="mt-4 border-t border-border pt-4">
