@@ -4,6 +4,7 @@ import type { HuntEventDto } from '@/lib/api';
 import Icon from '@/components/ui/icon';
 import BackupControls from './BackupControls';
 import EquipmentSummary from './EquipmentSummary';
+import HunterStatsBanner from './HunterStatsBanner';
 
 const routes = [
   { icon: 'CalendarDays', label: 'Календарь охот', href: '/calendar', desc: 'планы и завершённые охоты' },
@@ -124,6 +125,8 @@ const Cabinet = ({ profile, events = [], weaponsCount = 0, onStart }: Props) => 
             ))}
           </div>
         </div>
+
+        {profile && <HunterStatsBanner events={events} />}
 
         <EquipmentSummary hunterId={profile?.id} />
       </div>

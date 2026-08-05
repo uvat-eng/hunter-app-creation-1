@@ -11,6 +11,7 @@ import {
   findDistrictForPoint,
   type RegionMap,
 } from '@/lib/russia-maps';
+import WeatherWidget from './WeatherWidget';
 
 interface Props {
   hunterId?: string;
@@ -201,6 +202,9 @@ const HuntMap = ({ hunterId, events = [], loading }: Props) => {
                       Бюджет: <span className="font-medium text-hero-text">{fmtMoney(active.budget)}</span>
                     </div>
                   ) : null}
+                  {active.status === 'planned' && active.lat !== null && active.lng !== null && (
+                    <WeatherWidget lat={active.lat} lng={active.lng} date={active.date} className="mt-4" />
+                  )}
                 </div>
               )}
             </div>

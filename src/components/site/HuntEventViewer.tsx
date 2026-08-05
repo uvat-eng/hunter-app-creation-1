@@ -10,6 +10,7 @@ import {
 import type { HuntEventDto } from '@/lib/api';
 import { addToDeviceCalendar } from '@/lib/device-calendar';
 import { toast } from '@/hooks/use-toast';
+import WeatherWidget from './WeatherWidget';
 
 interface Props {
   open: boolean;
@@ -138,6 +139,10 @@ const HuntEventViewer = ({ open, onOpenChange, event, onEdit, onDelete }: Props)
               </div>
             )}
           </div>
+        )}
+
+        {event.status === 'planned' && event.lat !== null && event.lng !== null && (
+          <WeatherWidget lat={event.lat} lng={event.lng} date={event.date} className="mt-1" />
         )}
 
         <div className="space-y-3 border-t border-border pt-4">
