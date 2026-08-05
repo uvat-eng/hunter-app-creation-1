@@ -7,6 +7,7 @@ import { addToDeviceCalendar } from '@/lib/device-calendar';
 import { SPECIES, matchSpecies } from '@/lib/hunt-species';
 import HuntEventEditor from './HuntEventEditor';
 import HuntEventViewer from './HuntEventViewer';
+import WeatherBadge from './WeatherBadge';
 
 const weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const months = [
@@ -259,6 +260,9 @@ const MyCalendar = ({ hunterId, events = [], loading, onUpsert, onRemove }: Prop
                         {new Date(ev.date).toLocaleDateString('ru')}
                         {ev.locationName ? ` · ${ev.locationName}` : ''}
                       </div>
+                      {ev.status === 'planned' && (
+                        <WeatherBadge lat={ev.lat} lng={ev.lng} date={ev.date} className="mt-1.5" />
+                      )}
                     </div>
                     <div className="flex shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                       <button

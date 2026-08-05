@@ -4,6 +4,7 @@ import Icon from '@/components/ui/icon';
 import type { HuntEventDto } from '@/lib/api';
 import HuntEventEditor from './HuntEventEditor';
 import HuntEventViewer from './HuntEventViewer';
+import WeatherBadge from './WeatherBadge';
 
 const tags = ['Все', 'Перо', 'Копытные'];
 
@@ -94,7 +95,10 @@ const Hunts = ({ hunterId, events = [], loading, onUpsert, onRemove }: Props) =>
                 onClick={() => openView(h)}
                 className="grid w-full grid-cols-2 gap-3 border-b border-border bg-hero-surface/50 px-6 py-4 text-left text-sm transition-colors last:border-0 hover:bg-hero-surface md:grid-cols-[1fr_1.4fr_1fr_1.2fr_1fr] md:gap-4"
               >
-                <span className="font-medium text-hero-text">{new Date(h.date).toLocaleDateString('ru')}</span>
+                <span className="flex flex-col gap-1">
+                  <span className="font-medium text-hero-text">{new Date(h.date).toLocaleDateString('ru')}</span>
+                  {h.status === 'planned' && <WeatherBadge lat={h.lat} lng={h.lng} date={h.date} />}
+                </span>
                 <span className="flex items-center gap-2 text-hero-muted">
                   <Icon name="MapPin" size={15} className="text-primary" />
                   {h.locationName || '—'}
