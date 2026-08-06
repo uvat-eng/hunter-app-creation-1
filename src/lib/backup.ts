@@ -19,7 +19,7 @@ interface BackupData {
   accessories: AccessoryItemDto[];
 }
 
-export const exportBackup = async (): Promise<void> => {
+export const exportBackup = async (): Promise<{ nativeUri: string | null }> => {
   const [hunters, weapons, huntEvents, medicalCertificates, documents, cars, accessories] = await Promise.all([
     dbGetAll<HunterDto>('hunters'),
     dbGetAll<WeaponDto>('weapons'),
@@ -50,7 +50,9 @@ export const exportBackup = async (): Promise<void> => {
   if (isNativeApp) {
     // В нативном Android-приложении обычное скачивание через <a download> не создаёт файл —
     // WebView его не перехватывает. Поэтому пишем файл напрямую в память телефона (папка
-    // "Документы"), без каких-либо облаков и сторонних сервисов — данные не покидают устройство.
+    // "Документы") — это основной способ сохранения, файл остаётся на устройстве без
+    // передачи куда-либо. Ссылку на него возвращаем, чтобы при желании можно было
+    // переслать копию вручную (например, себе на второй номер) через "Поделиться".
     const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
     try {
       const perm = await Filesystem.checkPermissions();
@@ -67,7 +69,8 @@ export const exportBackup = async (): Promise<void> => {
       encoding: Encoding.UTF8,
       recursive: true,
     });
-    return;
+    const { uri } = await Filesystem.getUri({ path: fileName, directory: Directory.Documents });
+    return { nativeUri: uri };
   }
 
   const blob = new Blob([json], { type: 'application/json' });
@@ -79,6 +82,16 @@ export const exportBackup = async (): Promise<void> => {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+  return { nativeUri: null };
+};
+
+export const shareBackupFile = async (uri: string): Promise<void> => {
+  const { Share } = await import('@capacitor/share');
+  await Share.share({
+    title: 'Резервная копия дневника охотника',
+    url: uri,
+    dialogTitle: 'Переслать файл резервной копии',
+  });
 };
 
 export const importBackup = async (file: File): Promise<{ hunterId: string | null }> => {

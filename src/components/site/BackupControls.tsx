@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import Icon from '@/components/ui/icon';
 import { toast } from '@/hooks/use-toast';
-import { exportBackup, importBackup } from '@/lib/backup';
+import { ToastAction } from '@/components/ui/toast';
+import { exportBackup, importBackup, shareBackupFile } from '@/lib/backup';
 import { dbGetAll } from '@/lib/local-db';
 import type { HunterDto } from '@/lib/api';
 import {
@@ -24,8 +25,18 @@ const BackupControls = () => {
   const handleExport = async () => {
     setBusy(true);
     try {
-      await exportBackup();
-      toast({ title: 'Резервная копия сохранена', description: 'Файл сохранён в папке «Документы» на телефоне.' });
+      const { nativeUri } = await exportBackup();
+      toast({
+        title: 'Резервная копия сохранена',
+        description: nativeUri
+          ? 'Файл сохранён в папке «Документы» на телефоне.'
+          : 'Файл сохранён в загрузки браузера.',
+        action: nativeUri ? (
+          <ToastAction altText="Переслать" onClick={() => shareBackupFile(nativeUri)}>
+            Переслать
+          </ToastAction>
+        ) : undefined,
+      });
     } catch {
       toast({ title: 'Не удалось создать резервную копию' });
     } finally {
