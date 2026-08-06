@@ -10,12 +10,25 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
-import { carsApi, MAX_CARS_PER_HUNTER, type CarDto, type CarUpgradeDto, type MaintenanceDto } from '@/lib/api';
+import {
+  carsApi,
+  MAX_CARS_PER_HUNTER,
+  VEHICLE_TYPE_LABELS,
+  VEHICLE_TYPE_ICONS,
+  type CarDto,
+  type CarUpgradeDto,
+  type MaintenanceDto,
+  type VehicleType,
+} from '@/lib/api';
 import { genId } from '@/lib/local-db';
 import PhotoUploadSlot from './PhotoUploadSlot';
 
+const VEHICLE_TYPE_OPTIONS = Object.keys(VEHICLE_TYPE_LABELS) as VehicleType[];
+
 const emptyCar = (): Omit<CarDto, 'id' | 'hunterId'> => ({
+  vehicleType: 'car',
   brand: '',
   plate: '',
   photo: '',
@@ -58,7 +71,7 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
         setCars(list);
         setActiveId((prev) => (prev && list.some((c) => c.id === prev) ? prev : list[0]?.id || null));
       })
-      .catch(() => toast({ title: 'Не удалось загрузить данные автомобилей' }))
+      .catch(() => toast({ title: 'Не удалось загрузить данные транспорта' }))
       .finally(() => setLoading(false));
   }, [hunterId]);
 
@@ -90,7 +103,7 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
       return;
     }
     if (cars.length >= MAX_CARS_PER_HUNTER) {
-      toast({ title: `Можно добавить не более ${MAX_CARS_PER_HUNTER} автомобилей` });
+      toast({ title: `Можно добавить не более ${MAX_CARS_PER_HUNTER} единиц транспорта` });
       return;
     }
     setCarDraft(emptyCar());
@@ -101,21 +114,29 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
 
   const openEditCar = () => {
     if (!car) return;
-    setCarDraft({ brand: car.brand, plate: car.plate, photo: car.photo, cost: car.cost, upgrades: car.upgrades, maintenance: car.maintenance });
+    setCarDraft({
+      vehicleType: car.vehicleType,
+      brand: car.brand,
+      plate: car.plate,
+      photo: car.photo,
+      cost: car.cost,
+      upgrades: car.upgrades,
+      maintenance: car.maintenance,
+    });
     setCarCostInput(car.cost !== null && car.cost !== undefined ? String(car.cost) : '');
     setEditId(car.id);
     setCarOpen(true);
   };
 
   const saveCar = async () => {
-    if (!carDraft.brand.trim() || !carDraft.plate.trim()) {
-      toast({ title: 'Укажите марку и госномер' });
+    if (!carDraft.brand.trim()) {
+      toast({ title: 'Укажите марку и модель' });
       return;
     }
     const payload = { ...carDraft, cost: carCostInput.trim() === '' ? null : Number(carCostInput) };
     const saved = await persist(editId, payload);
     if (saved) {
-      toast({ title: editId ? 'Изменения сохранены' : 'Автомобиль добавлен' });
+      toast({ title: editId ? 'Изменения сохранены' : 'Транспорт добавлен' });
       setCarOpen(false);
     }
   };
@@ -129,9 +150,9 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
         setActiveId(next[0]?.id || null);
         return next;
       });
-      toast({ title: 'Автомобиль удалён' });
+      toast({ title: 'Транспорт удалён' });
     } catch {
-      toast({ title: 'Не удалось удалить автомобиль' });
+      toast({ title: 'Не удалось удалить транспорт' });
     } finally {
       setDeleteId(null);
     }
@@ -139,7 +160,7 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
 
   const openAddUpgrade = () => {
     if (!car) {
-      toast({ title: 'Сначала добавьте автомобиль' });
+      toast({ title: 'Сначала добавьте транспорт' });
       return;
     }
     setUpgradeDraft({ name: '', note: '', cost: '' });
@@ -171,7 +192,7 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
 
   const openAddService = () => {
     if (!car) {
-      toast({ title: 'Сначала добавьте автомобиль' });
+      toast({ title: 'Сначала добавьте транспорт' });
       return;
     }
     setServiceDraft({ date: '', description: '', cost: '' });
@@ -222,8 +243,8 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
       <div className="mx-auto max-w-7xl px-5 md:px-10">
         <SectionHeading
           eyebrow="Мой транспорт"
-          title="Автомобили охотника"
-          description={`Марка, госномер, установленные апгрейды и история техобслуживания с учётом затрат — до ${MAX_CARS_PER_HUNTER} автомобилей.`}
+          title="Транспорт охотника"
+          description={`Автомобиль, вездеход, квадроцикл или снегоход — марка, госномер, апгрейды и история техобслуживания с учётом затрат — до ${MAX_CARS_PER_HUNTER} единиц транспорта.`}
         />
 
         {loading ? (
@@ -236,16 +257,16 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
               <Icon name="Car" size={26} />
             </span>
             <div>
-              <div className="font-head text-lg font-semibold text-hero-text">Автомобиль ещё не добавлен</div>
+              <div className="font-head text-lg font-semibold text-hero-text">Транспорт ещё не добавлен</div>
               <p className="mt-1 text-sm text-hero-muted">
-                {hunterId ? 'Добавьте машину, на которой ездите на охоту.' : 'Заведите карточку охотника, чтобы начать.'}
+                {hunterId ? 'Добавьте транспорт, на котором ездите на охоту.' : 'Заведите карточку охотника, чтобы начать.'}
               </p>
             </div>
             <button
               onClick={openAddCar}
               className="inline-flex items-center gap-2 rounded-sm bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-transform hover:-translate-y-0.5"
             >
-              <Icon name="Plus" size={18} /> Добавить автомобиль
+              <Icon name="Plus" size={18} /> Добавить транспорт
             </button>
           </div>
         ) : (
@@ -261,7 +282,7 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
                       : 'border-border text-hero-muted hover:border-primary/50 hover:text-hero-text'
                   }`}
                 >
-                  <Icon name="Car" size={15} />
+                  <Icon name={VEHICLE_TYPE_ICONS[c.vehicleType] || 'Car'} fallback="Car" size={15} />
                   {c.brand || 'Без марки'} · {c.plate || '—'}
                 </button>
               ))}
@@ -283,14 +304,20 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
                       <img src={car.photo} alt={car.brand} className="aspect-video w-full object-cover" />
                     ) : (
                       <div className="flex aspect-video w-full items-center justify-center bg-primary/12 text-primary">
-                        <Icon name="Car" size={40} />
+                        <Icon name={VEHICLE_TYPE_ICONS[car.vehicleType] || 'Car'} fallback="Car" size={40} />
                       </div>
                     )}
                     <div className="p-6">
-                      <div className="font-head text-3xl font-bold uppercase tracking-tight text-hero-text">{car.brand}</div>
-                      <div className="mt-2 inline-flex items-center gap-2 rounded-sm border border-primary/40 bg-primary/10 px-3 py-1.5 font-head text-2xl font-bold tracking-widest text-primary">
-                        {car.plate}
+                      <div className="inline-flex items-center gap-1.5 rounded-sm bg-primary/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
+                        <Icon name={VEHICLE_TYPE_ICONS[car.vehicleType] || 'Car'} fallback="Car" size={13} />
+                        {VEHICLE_TYPE_LABELS[car.vehicleType] || 'Автомобиль'}
                       </div>
+                      <div className="mt-2 font-head text-3xl font-bold uppercase tracking-tight text-hero-text">{car.brand}</div>
+                      {car.plate && (
+                        <div className="mt-2 inline-flex items-center gap-2 rounded-sm border border-primary/40 bg-primary/10 px-3 py-1.5 font-head text-2xl font-bold tracking-widest text-primary">
+                          {car.plate}
+                        </div>
+                      )}
                       <div className="mt-5 flex gap-2">
                         <button
                           onClick={openEditCar}
@@ -301,7 +328,7 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
                         <button
                           onClick={() => setDeleteId(car.id)}
                           className="flex items-center justify-center gap-2 rounded-sm border border-border px-3 py-2.5 text-sm text-hero-muted transition-colors hover:border-destructive hover:text-destructive"
-                          aria-label="Удалить автомобиль"
+                          aria-label="Удалить транспорт"
                         >
                           <Icon name="Trash2" size={15} />
                         </button>
@@ -310,11 +337,11 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
                   </div>
 
                   <div className="mt-4 rounded-lg border border-primary/40 bg-primary/10 p-5">
-                    <div className="text-xs uppercase tracking-wide text-hero-muted">Общая стоимость автомобиля</div>
+                    <div className="text-xs uppercase tracking-wide text-hero-muted">Общая стоимость</div>
                     <div className="mt-1 font-head text-3xl font-bold text-primary">{formatMoney(totalCarCost)}</div>
                     <div className="mt-4 space-y-1.5 border-t border-primary/30 pt-3 text-sm text-hero-muted">
                       <div className="flex items-center justify-between">
-                        <span>Стоимость автомобиля</span>
+                        <span>Стоимость транспорта</span>
                         <span className="font-medium text-hero-text">{formatMoney(baseCost)}</span>
                       </div>
                       <div className="flex items-center justify-between">
@@ -414,12 +441,12 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
             {cars.length > 1 && (
               <div className="mt-6 rounded-lg border border-primary/40 bg-primary/10 p-5">
                 <div className="text-xs uppercase tracking-wide text-hero-muted">
-                  Общая стоимость всех автомобилей ({cars.length})
+                  Общая стоимость всего транспорта ({cars.length})
                 </div>
                 <div className="mt-1 font-head text-3xl font-bold text-primary">{formatMoney(fleetTotalCost)}</div>
                 <div className="mt-4 flex flex-wrap gap-x-8 gap-y-1.5 border-t border-primary/30 pt-3 text-sm text-hero-muted">
                   <div className="flex items-center gap-2">
-                    <span>Стоимость автомобилей</span>
+                    <span>Стоимость транспорта</span>
                     <span className="font-medium text-hero-text">{formatMoney(fleetBaseCost)}</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -437,11 +464,32 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
         <DialogContent className="max-w-md border-border bg-hero-surface text-hero-text">
           <DialogHeader>
             <DialogTitle className="font-head text-2xl font-bold tracking-tight">
-              {editId ? 'Редактировать автомобиль' : 'Новый автомобиль'}
+              {editId ? 'Редактировать транспорт' : 'Новый транспорт'}
             </DialogTitle>
-            <DialogDescription className="text-hero-muted">Марка, госномер и фото автомобиля</DialogDescription>
+            <DialogDescription className="text-hero-muted">Тип, марка, госномер и фото</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="car-type" className="text-hero-muted">Тип транспорта</Label>
+              <Select
+                value={carDraft.vehicleType}
+                onValueChange={(v) => setCarDraft((d) => ({ ...d, vehicleType: v as VehicleType }))}
+              >
+                <SelectTrigger id="car-type" className="mt-1.5 border-border bg-hero-bg">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {VEHICLE_TYPE_OPTIONS.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      <span className="flex items-center gap-2">
+                        <Icon name={VEHICLE_TYPE_ICONS[type]} fallback="Car" size={15} />
+                        {VEHICLE_TYPE_LABELS[type]}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label htmlFor="car-brand" className="text-hero-muted">Марка и модель</Label>
               <Input
@@ -453,17 +501,19 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
               />
             </div>
             <div>
-              <Label htmlFor="car-plate" className="text-hero-muted">Госномер</Label>
+              <Label htmlFor="car-plate" className="text-hero-muted">
+                Госномер {carDraft.vehicleType === 'car' ? '' : '(необязательно)'}
+              </Label>
               <Input
                 id="car-plate"
                 value={carDraft.plate}
                 onChange={(e) => setCarDraft((d) => ({ ...d, plate: e.target.value.toUpperCase() }))}
-                placeholder="А123БВ72"
+                placeholder={carDraft.vehicleType === 'car' ? 'А123БВ72' : 'При наличии'}
                 className="mt-1.5 border-border bg-hero-bg uppercase"
               />
             </div>
             <div>
-              <Label htmlFor="car-cost" className="text-hero-muted">Стоимость автомобиля, ₽</Label>
+              <Label htmlFor="car-cost" className="text-hero-muted">Стоимость, ₽</Label>
               <Input
                 id="car-cost"
                 type="number"
@@ -475,7 +525,7 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
               />
             </div>
             <PhotoUploadSlot
-              label="Фото автомобиля"
+              label="Фото"
               photo={carDraft.photo}
               onChange={(v) => setCarDraft((d) => ({ ...d, photo: v }))}
               icon="Car"
@@ -496,7 +546,7 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
         <DialogContent className="max-w-md border-border bg-hero-surface text-hero-text">
           <DialogHeader>
             <DialogTitle className="font-head text-2xl font-bold tracking-tight">Новый апгрейд</DialogTitle>
-            <DialogDescription className="text-hero-muted">Что установили или доработали в автомобиле</DialogDescription>
+            <DialogDescription className="text-hero-muted">Что установили или доработали</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -597,9 +647,9 @@ const Car = ({ hunterId }: { hunterId?: string }) => {
       <Dialog open={deleteId !== null} onOpenChange={(v) => !v && setDeleteId(null)}>
         <DialogContent className="max-w-sm border-border bg-hero-surface text-hero-text">
           <DialogHeader>
-            <DialogTitle className="font-head text-xl font-bold tracking-tight">Удалить автомобиль?</DialogTitle>
+            <DialogTitle className="font-head text-xl font-bold tracking-tight">Удалить транспорт?</DialogTitle>
             <DialogDescription className="text-hero-muted">
-              Все апгрейды и записи о техобслуживании этого автомобиля будут удалены безвозвратно.
+              Все апгрейды и записи о техобслуживании этого транспорта будут удалены безвозвратно.
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-3 pt-1">

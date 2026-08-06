@@ -214,9 +214,26 @@ export interface MaintenanceDto {
   cost: number;
 }
 
+export type VehicleType = 'car' | 'atv' | 'quad' | 'snowmobile';
+
+export const VEHICLE_TYPE_LABELS: Record<VehicleType, string> = {
+  car: 'Автомобиль',
+  atv: 'Вездеход',
+  quad: 'Квадроцикл',
+  snowmobile: 'Снегоход',
+};
+
+export const VEHICLE_TYPE_ICONS: Record<VehicleType, string> = {
+  car: 'Car',
+  atv: 'Truck',
+  quad: 'Bike',
+  snowmobile: 'Snowflake',
+};
+
 export interface CarDto {
   id: string;
   hunterId: string;
+  vehicleType: VehicleType;
   brand: string;
   plate: string;
   photo: string;
@@ -225,7 +242,11 @@ export interface CarDto {
   maintenance: MaintenanceDto[];
 }
 
-export const MAX_CARS_PER_HUNTER = 5;
+export const MAX_CARS_PER_HUNTER = 20;
+
+const toVehicleType = (value: unknown, fallback: VehicleType = 'car'): VehicleType => {
+  return value === 'car' || value === 'atv' || value === 'quad' || value === 'snowmobile' ? value : fallback;
+};
 
 export const carsApi = {
   list: async (hunterId: string) => {
@@ -237,11 +258,12 @@ export const carsApi = {
     const existing = await dbGetAll<CarDto>('cars');
     const count = existing.filter((c) => c.hunterId === hunterId).length;
     if (count >= MAX_CARS_PER_HUNTER) {
-      throw new Error(`Можно добавить не более ${MAX_CARS_PER_HUNTER} автомобилей`);
+      throw new Error(`Можно добавить не более ${MAX_CARS_PER_HUNTER} транспортных средств`);
     }
     const car: CarDto = {
       id: genId(),
       hunterId,
+      vehicleType: toVehicleType(data.vehicleType),
       brand: String(data.brand || ''),
       plate: String(data.plate || ''),
       photo: String(data.photo || ''),
@@ -258,6 +280,7 @@ export const carsApi = {
     const car: CarDto = {
       id,
       hunterId: existing?.hunterId || String(data.hunterId || ''),
+      vehicleType: toVehicleType(data.vehicleType, existing?.vehicleType ?? 'car'),
       brand: String(data.brand ?? existing?.brand ?? ''),
       plate: String(data.plate ?? existing?.plate ?? ''),
       photo: String(data.photo ?? existing?.photo ?? ''),
