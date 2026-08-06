@@ -1,5 +1,6 @@
 // Резервное копирование локальных данных приложения в файл и восстановление из него.
 import { dbGetAll, dbPut } from '@/lib/local-db';
+import { isNativeApp } from '@/lib/native';
 import type { HunterDto, WeaponDto, HuntEventDto, MedicalCertificateDto, DocumentDto, CarDto, AccessoryItemDto } from '@/lib/api';
 
 const HUNTER_ID_KEY = 'hunter_diary_hunter_id';
@@ -42,12 +43,37 @@ export const exportBackup = async (): Promise<void> => {
     accessories,
   };
 
-  const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+  const date = new Date().toISOString().slice(0, 10);
+  const fileName = `hunter-diary-backup-${date}.json`;
+  const json = JSON.stringify(data);
+
+  if (isNativeApp) {
+    // В нативном Android-приложении обычное скачивание через <a download> не создаёт файл —
+    // WebView его не перехватывает. Поэтому пишем файл во внутреннее хранилище и открываем
+    // системное меню "Поделиться", чтобы пользователь сохранил его в надёжное место
+    // (Google Диск, файлы, почта и т.д.).
+    const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
+    const { Share } = await import('@capacitor/share');
+    await Filesystem.writeFile({
+      path: fileName,
+      directory: Directory.Cache,
+      data: json,
+      encoding: Encoding.UTF8,
+    });
+    const { uri } = await Filesystem.getUri({ path: fileName, directory: Directory.Cache });
+    await Share.share({
+      title: 'Резервная копия дневника охотника',
+      url: uri,
+      dialogTitle: 'Сохранить резервную копию',
+    });
+    return;
+  }
+
+  const blob = new Blob([json], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const date = new Date().toISOString().slice(0, 10);
   a.href = url;
-  a.download = `hunter-diary-backup-${date}.json`;
+  a.download = fileName;
   document.body.appendChild(a);
   a.click();
   a.remove();
