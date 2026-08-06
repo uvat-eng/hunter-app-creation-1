@@ -25,7 +25,7 @@ const BackupControls = () => {
     setBusy(true);
     try {
       await exportBackup();
-      toast({ title: 'Резервная копия готова', description: 'Выберите, куда сохранить файл — Google Диск, файлы на телефоне или почта.' });
+      toast({ title: 'Резервная копия сохранена', description: 'Файл сохранён в папке «Документы» на телефоне.' });
     } catch {
       toast({ title: 'Не удалось создать резервную копию' });
     } finally {

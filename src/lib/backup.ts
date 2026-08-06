@@ -49,22 +49,23 @@ export const exportBackup = async (): Promise<void> => {
 
   if (isNativeApp) {
     // В нативном Android-приложении обычное скачивание через <a download> не создаёт файл —
-    // WebView его не перехватывает. Поэтому пишем файл во внутреннее хранилище и открываем
-    // системное меню "Поделиться", чтобы пользователь сохранил его в надёжное место
-    // (Google Диск, файлы, почта и т.д.).
+    // WebView его не перехватывает. Поэтому пишем файл напрямую в память телефона (папка
+    // "Документы"), без каких-либо облаков и сторонних сервисов — данные не покидают устройство.
     const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
-    const { Share } = await import('@capacitor/share');
+    try {
+      const perm = await Filesystem.checkPermissions();
+      if (perm.publicStorage !== 'granted') {
+        await Filesystem.requestPermissions();
+      }
+    } catch {
+      /* на Android 11+ разрешение не требуется для собственных файлов приложения */
+    }
     await Filesystem.writeFile({
       path: fileName,
-      directory: Directory.Cache,
+      directory: Directory.Documents,
       data: json,
       encoding: Encoding.UTF8,
-    });
-    const { uri } = await Filesystem.getUri({ path: fileName, directory: Directory.Cache });
-    await Share.share({
-      title: 'Резервная копия дневника охотника',
-      url: uri,
-      dialogTitle: 'Сохранить резервную копию',
+      recursive: true,
     });
     return;
   }
